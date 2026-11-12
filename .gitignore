@@ -1,0 +1,26 @@
+# Compilación
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+TestResults/
+
+# Base de datos SQLite local (las migraciones SÍ se versionan)
+*.db
+*.db-shm
+*.db-wal
+
+# Datos generados en ejecución
+AutoFix.Api/Logs/
+AutoFix.Api/wwwroot/uploads/**
+!AutoFix.Api/wwwroot/uploads/.gitkeep
+
+# Secretos (la llave JWT va en user-secrets o variables de entorno)
+appsettings.*.local.json
+*.env
+secrets.json
