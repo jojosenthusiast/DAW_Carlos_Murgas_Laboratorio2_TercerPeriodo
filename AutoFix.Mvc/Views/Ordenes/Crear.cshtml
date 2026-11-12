@@ -1,0 +1,76 @@
+@model OrdenCrearVm
+@{ ViewData["Title"] = "Nueva orden de reparación"; }
+<div class="encabezado"><h1 class="titulo">Nueva orden de reparación</h1></div>
+<div class="panel" style="max-width: 820px">
+    <p class="texto-suave">La orden se crea en estado Recibido. El sistema rechaza una segunda orden activa para el mismo vehículo y servicio.</p>
+    <form asp-action="Crear" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="ClienteId" class="form-label"></label>
+                <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select" id="clienteId">
+                    <option value="0">Selecciona el cliente</option>
+                </select>
+                <span asp-validation-for="ClienteId"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="VehiculoId" class="form-label"></label>
+                <select asp-for="VehiculoId" class="form-select" id="vehiculoId" data-seleccion="@Model.VehiculoId">
+                    <option value="0">Primero selecciona el cliente</option>
+                </select>
+                <span asp-validation-for="VehiculoId"></span>
+            </div>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="TipoServicio" class="form-label"></label>
+                <select asp-for="TipoServicio" class="form-select">
+                    <option value="">Selecciona el servicio</option>
+                    @foreach (var s in Formato.Servicios)
+                    {
+                        <option value="@s.Valor" selected="@(Model.TipoServicio == s.Valor)">@s.Texto</option>
+                    }
+                </select>
+                <span asp-validation-for="TipoServicio"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="FechaEstimadaFinalizacion" class="form-label"></label>
+                <input asp-for="FechaEstimadaFinalizacion" type="datetime-local" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                <span asp-validation-for="FechaEstimadaFinalizacion"></span>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label asp-for="DescripcionProblema" class="form-label"></label>
+            <textarea asp-for="DescripcionProblema" rows="4" class="form-control" placeholder="Lo que reporta el cliente: síntomas, ruidos, testigos encendidos..."></textarea>
+            <span asp-validation-for="DescripcionProblema"></span>
+        </div>
+        <button type="submit" class="btn btn-primario">Crear orden</button>
+        <a asp-action="Index" class="btn btn-secundario ms-2">Cancelar</a>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const cliente = document.getElementById('clienteId');
+            const vehiculo = document.getElementById('vehiculoId');
+            async function cargar() {
+                const id = cliente.value;
+                vehiculo.innerHTML = '<option value="0">' + (id === '0' ? 'Primero selecciona el cliente' : 'Cargando vehículos...') + '</option>';
+                if (id === '0') return;
+                const r = await fetch('@Url.Action("VehiculosDeCliente")?clienteId=' + encodeURIComponent(id));
+                if (!r.ok) { vehiculo.innerHTML = '<option value="0">No se pudieron cargar los vehículos</option>'; return; }
+                const lista = await r.json();
+                vehiculo.innerHTML = '<option value="0">Selecciona el vehículo</option>';
+                lista.forEach(v => {
+                    const op = document.createElement('option');
+                    op.value = v.id; op.textContent = v.texto;
+                    if (String(v.id) === vehiculo.dataset.seleccion) op.selected = true;
+                    vehiculo.appendChild(op);
+                });
+            }
+            cliente.addEventListener('change', () => { vehiculo.dataset.seleccion = '0'; cargar(); });
+            if (cliente.value !== '0') cargar();
+        })();
+    </script>
+}

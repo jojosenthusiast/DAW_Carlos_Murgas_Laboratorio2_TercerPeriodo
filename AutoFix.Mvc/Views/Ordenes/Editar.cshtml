@@ -1,0 +1,24 @@
+@model OrdenEditarVm
+@{ ViewData["Title"] = $"Editar {Model.NumeroOrden}"; }
+<div class="encabezado"><h1 class="titulo">Editar orden @Model.NumeroOrden</h1></div>
+<div class="panel" style="max-width: 760px">
+    <p class="texto-suave">Solo se editan órdenes en estado Recibido o En diagnóstico. Si alguien más la modificó mientras la editabas, el sistema te pedirá recargar.</p>
+    <form asp-action="Editar" asp-route-id="@Model.Id" method="post" novalidate>
+        <input type="hidden" asp-for="Version" />
+        <input type="hidden" asp-for="NumeroOrden" />
+        <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="DescripcionProblema" class="form-label"></label>
+            <textarea asp-for="DescripcionProblema" rows="4" class="form-control"></textarea>
+            <span asp-validation-for="DescripcionProblema"></span>
+        </div>
+        <div class="mb-4" style="max-width: 320px">
+            <label asp-for="FechaEstimadaFinalizacion" class="form-label"></label>
+            <input asp-for="FechaEstimadaFinalizacion" type="datetime-local" class="form-control" />
+            <span asp-validation-for="FechaEstimadaFinalizacion"></span>
+        </div>
+        <button type="submit" class="btn btn-primario">Guardar cambios</button>
+        <a asp-action="Detalle" asp-route-id="@Model.Id" class="btn btn-secundario ms-2">Cancelar</a>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

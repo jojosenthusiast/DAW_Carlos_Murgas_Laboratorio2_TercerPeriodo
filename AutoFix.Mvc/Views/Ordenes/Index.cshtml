@@ -1,0 +1,52 @@
+@model List<OrdenResumenVm>
+@{
+    var esCliente = User.IsInRole(Roles.Cliente);
+    ViewData["Title"] = esCliente ? "Mis reparaciones" : User.IsInRole(Roles.Mecanico) ? "Mis órdenes asignadas" : "Órdenes de reparación";
+    var estado = ViewBag.Estado as string;
+}
+<div class="encabezado">
+    <h1 class="titulo">@ViewData["Title"]</h1>
+    @if (User.Puede(Permisos.OrdenesCrear))
+    {
+        <a asp-action="Crear" class="btn btn-senal"><i class="bi bi-plus-lg me-1"></i>Nueva orden</a>
+    }
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4 col-lg-3">
+        <select name="estado" class="form-select" aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            @foreach (var e in Formato.EstadosOrden)
+            {
+                <option value="@e.Valor" selected="@(estado == e.Valor)">@e.Texto</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-5 col-lg-4">
+        <input type="search" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Número de orden, placa o cliente" aria-label="Buscar orden" />
+    </div>
+    <div class="col-auto"><button class="btn btn-primario">Filtrar</button></div>
+</form>
+<div class="tabla">
+    <table class="table table-hover">
+        <thead><tr><th>Orden</th>@if (!esCliente){<th>Cliente</th>}<th>Vehículo</th><th>Servicio</th><th>Estado</th><th>Mecánico</th><th>Ingreso</th><th>Entrega estimada</th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="8" class="texto-suave p-4">No hay órdenes que coincidan con el filtro.</td></tr>
+        }
+        @foreach (var o in Model)
+        {
+            <tr>
+                <td><a asp-action="Detalle" asp-route-id="@o.Id"><strong>@o.NumeroOrden</strong></a></td>
+                @if (!esCliente) { <td>@o.ClienteNombre</td> }
+                <td>@o.VehiculoPlaca <span class="texto-suave small d-block">@o.VehiculoDescripcion</span></td>
+                <td>@Formato.Servicio(o.TipoServicio)</td>
+                <td><partial name="_Estado" model="o.Estado" /></td>
+                <td>@(o.MecanicoNombre ?? "Sin asignar")</td>
+                <td>@Formato.Dia(o.FechaIngreso)</td>
+                <td>@Formato.Dia(o.FechaEstimadaFinalizacion)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

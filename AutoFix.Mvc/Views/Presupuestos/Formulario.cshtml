@@ -1,0 +1,114 @@
+@model PresupuestoFormVm
+@{
+    var editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Modificar presupuesto" : "Elaborar presupuesto";
+    if (Model.Detalles.Count == 0) Model.Detalles.Add(new LineaPresupuestoVm());
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">@ViewData["Title"]</h1>
+        <p class="texto-suave mb-0">Orden @Model.NumeroOrden. Los precios se toman del inventario y el total lo calcula el sistema.</p>
+    </div>
+</div>
+<div class="panel" style="max-width: 900px">
+    <form asp-action="@(editando ? "Editar" : "Crear")" asp-route-id="@Model.Id" method="post" novalidate id="formPresupuesto">
+        <input type="hidden" asp-for="OrdenId" />
+        <input type="hidden" asp-for="NumeroOrden" />
+        <input type="hidden" asp-for="Version" />
+        <div asp-validation-summary="All" class="mb-3"></div>
+
+        <h2 class="subtitulo">Repuestos</h2>
+        <div class="table-responsive">
+            <table class="table align-middle" id="lineas">
+                <thead><tr><th style="width:55%">Repuesto</th><th>Precio</th><th style="width:120px">Cantidad</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+                <tbody>
+                @for (var i = 0; i < Model.Detalles.Count; i++)
+                {
+                    <tr class="linea">
+                        <td>
+                            <select name="Detalles[@i].RepuestoId" class="form-select repuesto">
+                                <option value="0" data-precio="0">Sin repuesto</option>
+                                @foreach (var r in Model.Repuestos)
+                                {
+                                    <option value="@r.Id" data-precio="@r.Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected="@(r.Id == Model.Detalles[i].RepuestoId)">@r.Codigo, @r.Nombre (@r.Existencias disp.)</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="precio">$0.00</td>
+                        <td><input type="number" name="Detalles[@i].Cantidad" value="@Model.Detalles[i].Cantidad" min="1" max="1000" class="form-control cantidad" /></td>
+                        <td class="text-end subtotal">$0.00</td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-secundario quitar" aria-label="Quitar línea"><i class="bi bi-x-lg"></i></button></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-sm btn-secundario mb-4" id="agregar"><i class="bi bi-plus-lg me-1"></i>Agregar repuesto</button>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label asp-for="ManoObra" class="form-label"></label>
+                <input asp-for="ManoObra" class="form-control" type="number" step="0.01" min="0" id="manoObra" />
+                <span asp-validation-for="ManoObra"></span>
+            </div>
+            <div class="col-md-8 d-flex align-items-end justify-content-md-end">
+                <div class="text-end"><span class="texto-suave">Total estimado</span><div class="fs-3 fw-bold" id="total">$0.00</div></div>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label asp-for="Observaciones" class="form-label"></label>
+            <textarea asp-for="Observaciones" rows="3" class="form-control"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primario">@(editando ? "Guardar cambios" : "Crear presupuesto")</button>
+        <a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@Model.OrdenId" class="btn btn-secundario ms-2">Cancelar</a>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const cuerpo = document.querySelector('#lineas tbody');
+            const dinero = n => '$' + n.toFixed(2);
+            function renumerar() {
+                cuerpo.querySelectorAll('tr.linea').forEach((fila, i) => {
+                    fila.querySelector('.repuesto').name = `Detalles[${i}].RepuestoId`;
+                    fila.querySelector('.cantidad').name = `Detalles[${i}].Cantidad`;
+                });
+            }
+            function recalcular() {
+                let total = parseFloat(document.getElementById('manoObra').value) || 0;
+                cuerpo.querySelectorAll('tr.linea').forEach(fila => {
+                    const op = fila.querySelector('.repuesto').selectedOptions[0];
+                    const precio = parseFloat(op.dataset.precio) || 0;
+                    const cantidad = parseInt(fila.querySelector('.cantidad').value) || 0;
+                    fila.querySelector('.precio').textContent = dinero(precio);
+                    fila.querySelector('.subtotal').textContent = dinero(precio * cantidad);
+                    total += precio * cantidad;
+                });
+                document.getElementById('total').textContent = dinero(total);
+            }
+            document.getElementById('agregar').addEventListener('click', () => {
+                const modelo = cuerpo.querySelector('tr.linea');
+                const nueva = modelo.cloneNode(true);
+                nueva.querySelector('.repuesto').value = '0';
+                nueva.querySelector('.cantidad').value = '1';
+                cuerpo.appendChild(nueva);
+                renumerar(); recalcular();
+            });
+            cuerpo.addEventListener('click', e => {
+                const boton = e.target.closest('.quitar');
+                if (!boton) return;
+                if (cuerpo.querySelectorAll('tr.linea').length === 1) {
+                    const fila = boton.closest('tr');
+                    fila.querySelector('.repuesto').value = '0';
+                } else {
+                    boton.closest('tr').remove();
+                }
+                renumerar(); recalcular();
+            });
+            document.getElementById('formPresupuesto').addEventListener('input', recalcular);
+            document.getElementById('formPresupuesto').addEventListener('change', recalcular);
+            recalcular();
+        })();
+    </script>
+}

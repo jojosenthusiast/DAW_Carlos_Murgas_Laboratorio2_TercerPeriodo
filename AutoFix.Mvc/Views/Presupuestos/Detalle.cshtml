@@ -1,0 +1,94 @@
+@model PresupuestoVm
+@{
+    ViewData["Title"] = $"Presupuesto {Model.NumeroOrden}";
+    var tecnico = User.IsInRole(Roles.Mecanico) || User.IsInRole(Roles.Supervisor) || User.IsInRole(Roles.Administrador);
+    var editable = tecnico && Model.Estado is "Borrador" or "Rechazado";
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">Presupuesto de la orden @Model.NumeroOrden</h1>
+        <p class="texto-suave mb-0">@Model.ClienteNombre, vehículo @Model.VehiculoPlaca. Elaborado por @Model.CreadoPor el @Formato.Fecha(Model.FechaCreacion).</p>
+    </div>
+    <a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@Model.OrdenId" class="btn btn-secundario">Ver orden</a>
+</div>
+
+@foreach (var a in Model.Advertencias)
+{
+    <div class="alert aviso-alerta py-2">@a</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="tabla mb-3">
+            <table class="table mb-0">
+                <thead><tr><th>Código</th><th>Repuesto</th><th class="text-end">Cantidad</th><th class="text-end">Precio unitario</th><th class="text-end">Subtotal</th></tr></thead>
+                <tbody>
+                @if (Model.Detalles.Count == 0)
+                {
+                    <tr><td colspan="5" class="texto-suave">Solo incluye mano de obra.</td></tr>
+                }
+                @foreach (var d in Model.Detalles)
+                {
+                    <tr>
+                        <td>@d.RepuestoCodigo</td>
+                        <td>@d.RepuestoNombre</td>
+                        <td class="text-end">@d.Cantidad</td>
+                        <td class="text-end">@Formato.Dinero(d.PrecioUnitario)</td>
+                        <td class="text-end">@Formato.Dinero(d.Subtotal)</td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot>
+                    <tr><td colspan="4" class="text-end">Repuestos</td><td class="text-end">@Formato.Dinero(Model.TotalRepuestos)</td></tr>
+                    <tr><td colspan="4" class="text-end">Mano de obra</td><td class="text-end">@Formato.Dinero(Model.ManoObra)</td></tr>
+                    <tr><td colspan="4" class="text-end fw-bold">Total</td><td class="text-end fw-bold fs-5">@Formato.Dinero(Model.Total)</td></tr>
+                </tfoot>
+            </table>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.Observaciones))
+        {
+            <div class="panel"><h2 class="subtitulo">Observaciones</h2><p class="mb-0">@Model.Observaciones</p></div>
+        }
+    </div>
+    <div class="col-lg-4">
+        <div class="panel mb-3">
+            <h2 class="subtitulo">Estado</h2>
+            <p><span class="tag @Formato.ClaseEstado(Model.Estado)">@Formato.EstadoPresupuesto(Model.Estado)</span></p>
+            <dl class="small mb-0">
+                <dt>¿Aprobado?</dt><dd>@(Model.Aprobado ? "Sí" : "No")</dd>
+                @if (Model.FechaEnvio.HasValue) { <dt>Enviado a aprobación</dt><dd>@Formato.Fecha(Model.FechaEnvio)</dd> }
+                @if (Model.FechaRespuesta.HasValue) { <dt>Respuesta</dt><dd>@Formato.Fecha(Model.FechaRespuesta) por @Model.RespondidoPor</dd> }
+                @if (Model.MotivoRechazo is not null) { <dt>Motivo del rechazo</dt><dd>@Model.MotivoRechazo</dd> }
+                @if (Model.InventarioDescontado) { <dt>Inventario</dt><dd>Repuestos descontados automáticamente.</dd> }
+            </dl>
+        </div>
+
+        @if (editable)
+        {
+            <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-secundario w-100 mb-2">Modificar presupuesto</a>
+        }
+        @if (Model.Estado == "Borrador" && User.EsPersonal() && User.Puede(Permisos.OrdenesEditar))
+        {
+            <form asp-action="Enviar" asp-route-id="@Model.Id" method="post" class="mb-2">
+                <input type="hidden" name="version" value="@Model.Version" />
+                <button class="btn btn-primario w-100">Enviar a aprobación</button>
+            </form>
+        }
+        @if (Model.Estado == "PendienteAprobacion" && User.Puede(Permisos.OrdenesAprobar) && (User.IsInRole(Roles.Supervisor) || User.IsInRole(Roles.Administrador)))
+        {
+            <div class="panel">
+                <h2 class="subtitulo">Decisión</h2>
+                <form asp-action="Aprobar" asp-route-id="@Model.Id" method="post" class="mb-3" data-confirmar="Al aprobar se descontarán los repuestos del inventario. ¿Continuar?">
+                    <input type="hidden" name="version" value="@Model.Version" />
+                    <input name="comentario" class="form-control mb-2" placeholder="Comentario (opcional)" maxlength="500" />
+                    <button class="btn btn-senal w-100">Aprobar presupuesto</button>
+                </form>
+                <form asp-action="Rechazar" asp-route-id="@Model.Id" method="post">
+                    <input type="hidden" name="version" value="@Model.Version" />
+                    <textarea name="comentario" rows="2" class="form-control mb-2" placeholder="Motivo del rechazo" minlength="5" maxlength="500" required></textarea>
+                    <button class="btn btn-peligro w-100">Rechazar</button>
+                </form>
+            </div>
+        }
+    </div>
+</div>

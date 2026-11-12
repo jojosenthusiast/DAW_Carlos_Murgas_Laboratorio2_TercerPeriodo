@@ -1,0 +1,346 @@
+@model OrdenDetallePaginaVm
+@{
+    var o = Model.Orden;
+    ViewData["Title"] = o.NumeroOrden;
+    var personal = User.EsPersonal();
+    var tecnico = User.IsInRole(Roles.Mecanico) || User.IsInRole(Roles.Supervisor) || User.IsInRole(Roles.Administrador);
+    var ruta = new[] { "Recibido", "EnDiagnostico", "Presupuestado", "PendienteAprobacion", "Aprobado", "EnReparacion", "Finalizado", "Entregado" };
+    var cancelada = o.Estado == "Cancelado";
+    var indiceActual = Array.IndexOf(ruta, o.Estado);
+    var terminal = o.Estado is "Entregado" or "Cancelado" or "Finalizado";
+    var puedeEditar = personal && User.Puede(Permisos.OrdenesEditar) && o.Estado is "Recibido" or "EnDiagnostico";
+    var transiciones = o.TransicionesPermitidas.Where(t => t is not ("Cancelado" or "Finalizado")).ToList();
+    var p = Model.Presupuesto;
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">Orden @o.NumeroOrden <partial name="_Estado" model="o.Estado" /></h1>
+        <p class="texto-suave mb-0">@Formato.Servicio(o.TipoServicio). Ingresó el @Formato.Fecha(o.FechaIngreso), entrega estimada @Formato.Fecha(o.FechaEstimadaFinalizacion).</p>
+    </div>
+    @if (puedeEditar)
+    {
+        <a asp-action="Editar" asp-route-id="@o.Id" class="btn btn-secundario">Editar datos generales</a>
+    }
+</div>
+
+@if (cancelada)
+{
+    <div class="alert aviso-error"><strong>Orden cancelada.</strong> Motivo: @o.MotivoCancelacion</div>
+}
+else
+{
+    <ol class="ruta panel" aria-label="Avance de la orden">
+        @for (var i = 0; i < ruta.Length; i++)
+        {
+            var clase = i < indiceActual ? "hecho" : i == indiceActual ? "actual" : "";
+            <li class="@clase" aria-current="@(i == indiceActual ? "step" : null)"><span class="punto"></span>@Formato.Estado(ruta[i])</li>
+        }
+    </ol>
+}
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <!-- Datos generales -->
+        <div class="panel mb-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    @if (Rutas.Imagen(o.VehiculoFotoRuta) is string foto)
+                    {
+                        <img src="@foto" class="miniatura" alt="Vehículo @o.VehiculoPlaca" />
+                    }
+                    else
+                    {
+                        <div class="sin-foto"><i class="bi bi-car-front fs-1"></i></div>
+                    }
+                </div>
+                <div class="col-md-8">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Cliente</dt>
+                        <dd class="col-sm-8"><a asp-controller="Clientes" asp-action="Detalle" asp-route-id="@o.ClienteId">@o.ClienteNombre</a> (@o.ClienteTelefono)</dd>
+                        <dt class="col-sm-4">Vehículo</dt>
+                        <dd class="col-sm-8"><a asp-controller="Vehiculos" asp-action="Detalle" asp-route-id="@o.VehiculoId">@o.VehiculoPlaca</a>, @o.VehiculoDescripcion</dd>
+                        <dt class="col-sm-4">Mecánico</dt>
+                        <dd class="col-sm-8">@(o.MecanicoNombre ?? "Sin asignar")</dd>
+                        <dt class="col-sm-4">Problema reportado</dt>
+                        <dd class="col-sm-8">@o.DescripcionProblema</dd>
+                        @if (o.FechaFinalizacion.HasValue)
+                        {
+                            <dt class="col-sm-4">Finalizada</dt><dd class="col-sm-8">@Formato.Fecha(o.FechaFinalizacion)</dd>
+                        }
+                        @if (o.FechaEntrega.HasValue)
+                        {
+                            <dt class="col-sm-4">Entregada</dt><dd class="col-sm-8">@Formato.Fecha(o.FechaEntrega)</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnóstico -->
+        <div class="panel mb-4">
+            <h2 class="subtitulo">Diagnóstico</h2>
+            @if (o.Estado == "EnDiagnostico" && tecnico && User.Puede(Permisos.OrdenesEditar))
+            {
+                <form asp-action="Diagnostico" asp-route-id="@o.Id" method="post">
+                    <input type="hidden" name="version" value="@o.Version" />
+                    <textarea name="diagnostico" rows="4" class="form-control mb-2" minlength="10" maxlength="2000" required placeholder="Hallazgos de la revisión y trabajo recomendado">@o.Diagnostico</textarea>
+                    <button class="btn btn-primario btn-sm">Guardar diagnóstico</button>
+                </form>
+            }
+            else
+            {
+                <p class="mb-0">@(o.Diagnostico ?? "Aún no se registra el diagnóstico.")</p>
+            }
+        </div>
+
+        <!-- Presupuesto -->
+        <div class="panel mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="subtitulo mb-0">Presupuesto</h2>
+                @if (p is not null)
+                {
+                    <a asp-controller="Presupuestos" asp-action="Detalle" asp-route-id="@p.Id" class="btn btn-sm btn-secundario">Ver detalle</a>
+                }
+            </div>
+            @if (p is null)
+            {
+                <p class="texto-suave mb-2">Esta orden aún no tiene presupuesto.</p>
+                @if (o.Estado == "EnDiagnostico" && tecnico && !string.IsNullOrWhiteSpace(o.Diagnostico))
+                {
+                    <a asp-controller="Presupuestos" asp-action="Crear" asp-route-ordenId="@o.Id" class="btn btn-senal btn-sm">Elaborar presupuesto</a>
+                }
+                else if (o.Estado == "EnDiagnostico" && tecnico)
+                {
+                    <p class="small texto-suave mb-0">Registra el diagnóstico para poder elaborar el presupuesto.</p>
+                }
+            }
+            else
+            {
+                <div class="d-flex flex-wrap gap-4 align-items-center">
+                    <div><span class="texto-suave">Total</span><div class="fs-4 fw-semibold">@Formato.Dinero(p.Total)</div></div>
+                    <div><span class="texto-suave">Estado</span><div><span class="tag @Formato.ClaseEstado(p.Estado)">@Formato.EstadoPresupuesto(p.Estado)</span></div></div>
+                    <div><span class="texto-suave">Aprobado</span><div class="fw-semibold">@(p.Aprobado ? "Sí" : "No")</div></div>
+                </div>
+                @if (p.Estado == "Rechazado" && p.MotivoRechazo is not null)
+                {
+                    <p class="small mt-2 mb-0">Motivo del rechazo: @p.MotivoRechazo</p>
+                }
+            }
+        </div>
+
+        <!-- Repuestos utilizados -->
+        @if (personal)
+        {
+            <div class="panel mb-4">
+                <h2 class="subtitulo">Repuestos utilizados</h2>
+                @if (o.Estado == "EnReparacion" && tecnico && Model.Repuestos.Count > 0)
+                {
+                    <form asp-action="UsarRepuesto" asp-route-id="@o.Id" method="post" class="row g-2 align-items-end mb-3">
+                        <input type="hidden" name="versionRepuesto" id="versionRepuesto" />
+                        <div class="col-md-5">
+                            <label for="repuestoId" class="form-label">Repuesto</label>
+                            <select name="repuestoId" id="repuestoId" class="form-select" required>
+                                <option value="">Selecciona</option>
+                                @foreach (var r in Model.Repuestos)
+                                {
+                                    <option value="@r.Id" data-version="@r.Version" disabled="@(r.Existencias == 0)">@r.Codigo, @r.Nombre (@r.Existencias disp.)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <input type="number" name="cantidad" id="cantidad" class="form-control" min="1" max="1000" value="1" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="observacion" class="form-label">Observación</label>
+                            <input name="observacion" id="observacion" class="form-control" maxlength="200" />
+                        </div>
+                        <div class="col-md-2"><button class="btn btn-primario w-100">Descontar</button></div>
+                    </form>
+                }
+                @if (Model.RepuestosUtilizados.Count == 0)
+                {
+                    <p class="texto-suave mb-0">No hay movimientos de inventario asociados a esta orden.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Fecha</th><th>Repuesto</th><th>Tipo</th><th class="text-end">Cantidad</th><th>Motivo</th><th>Usuario</th></tr></thead>
+                            <tbody>
+                            @foreach (var m in Model.RepuestosUtilizados)
+                            {
+                                <tr>
+                                    <td>@Formato.Fecha(m.Fecha)</td>
+                                    <td>@m.RepuestoCodigo</td>
+                                    <td>@m.Tipo</td>
+                                    <td class="text-end">@m.Cantidad</td>
+                                    <td>@m.Motivo</td>
+                                    <td class="small">@m.Usuario</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Evidencias -->
+        <div class="panel">
+            <h2 class="subtitulo">Fotografías y evidencias</h2>
+            @if (personal && !cancelada)
+            {
+                <form asp-action="Evidencia" asp-route-id="@o.Id" method="post" enctype="multipart/form-data" class="row g-2 align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label for="archivoEvidencia" class="form-label">Imagen (JPG o PNG, máx. 5 MB)</label>
+                        <input type="file" name="archivo" id="archivoEvidencia" class="form-control" accept=".jpg,.jpeg,.png" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tipoEvidencia" class="form-label">Tipo</label>
+                        <select name="tipo" id="tipoEvidencia" class="form-select">
+                            @foreach (var t in Formato.TiposEvidencia)
+                            {
+                                <option value="@t.Valor">@t.Texto</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="descripcionEvidencia" class="form-label">Descripción</label>
+                        <input name="descripcion" id="descripcionEvidencia" class="form-control" maxlength="300" />
+                    </div>
+                    <div class="col-md-2"><button class="btn btn-primario w-100">Subir</button></div>
+                </form>
+            }
+            @if (o.Evidencias.Count == 0)
+            {
+                <p class="texto-suave mb-0">No hay fotografías registradas.</p>
+            }
+            <div class="galeria">
+                @foreach (var e in o.Evidencias)
+                {
+                    <figure class="foto m-0">
+                        <a href="@Rutas.Imagen(e.Ruta)" target="_blank" rel="noopener"><img src="@Rutas.Imagen(e.Ruta)" alt="@Formato.Evidencia(e.Tipo)" loading="lazy" /></a>
+                        <figcaption class="pie"><strong>@Formato.Evidencia(e.Tipo)</strong><br />@e.Descripcion<br /><span class="texto-suave">@Formato.Fecha(e.FechaSubida)</span></figcaption>
+                    </figure>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <!-- Acciones de estado -->
+        @if (personal && !terminal || o.TransicionesPermitidas.Contains("Entregado"))
+        {
+            <div class="panel mb-4">
+                <h2 class="subtitulo">Acciones</h2>
+                @if (o.TransicionesPermitidas.Count == 0)
+                {
+                    <p class="texto-suave small mb-0">No hay cambios de estado disponibles para tu rol en este momento.</p>
+                }
+                @foreach (var t in transiciones)
+                {
+                    <form asp-action="CambiarEstado" asp-route-id="@o.Id" method="post" class="mb-2">
+                        <input type="hidden" name="nuevoEstado" value="@t" />
+                        <input type="hidden" name="version" value="@o.Version" />
+                        <button class="btn btn-primario w-100">Pasar a «@Formato.Estado(t)»</button>
+                    </form>
+                }
+                @if (o.TransicionesPermitidas.Contains("Finalizado"))
+                {
+                    <form asp-action="Finalizar" asp-route-id="@o.Id" method="post" class="mb-2" data-confirmar="¿Confirmas que la reparación está terminada?">
+                        <input type="hidden" name="version" value="@o.Version" />
+                        <input name="comentario" class="form-control form-control-sm mb-2" placeholder="Comentario (opcional)" maxlength="500" />
+                        <button class="btn btn-senal w-100">Finalizar reparación</button>
+                    </form>
+                }
+                @if (o.TransicionesPermitidas.Contains("Cancelado"))
+                {
+                    <form asp-action="CambiarEstado" asp-route-id="@o.Id" method="post" class="mt-3" data-confirmar="¿Cancelar la orden? Los repuestos descontados se devolverán al inventario.">
+                        <input type="hidden" name="nuevoEstado" value="Cancelado" />
+                        <input type="hidden" name="version" value="@o.Version" />
+                        <label for="motivoCancelacion" class="form-label small">Motivo de cancelación</label>
+                        <textarea name="comentario" id="motivoCancelacion" rows="2" class="form-control mb-2" minlength="5" maxlength="500" required></textarea>
+                        <button class="btn btn-peligro w-100">Cancelar orden</button>
+                    </form>
+                }
+            </div>
+        }
+
+        <!-- Asignación de mecánico (escenario B) -->
+        @if (User.Puede(Permisos.OrdenesAsignar) && !terminal)
+        {
+            <div class="panel mb-4">
+                <h2 class="subtitulo">@(o.MecanicoId.HasValue ? "Reasignar mecánico" : "Asignar mecánico")</h2>
+                <form asp-action="Asignar" asp-route-id="@o.Id" method="post">
+                    <input type="hidden" name="version" value="@o.Version" />
+                    <input type="hidden" name="versionMecanico" id="versionMecanico" />
+                    <label for="mecanicoId" class="form-label">Mecánico</label>
+                    <select name="mecanicoId" id="mecanicoId" class="form-select mb-2" required>
+                        <option value="">Selecciona</option>
+                        @foreach (var m in Model.Mecanicos)
+                        {
+                            <option value="@m.Id" data-version="@m.Version" selected="@(m.Id == o.MecanicoId)">@m.NombreCompleto (@m.Especialidad)</option>
+                        }
+                    </select>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label for="inicio" class="form-label small">Inicio</label>
+                            <input type="datetime-local" name="inicio" id="inicio" class="form-control" required value="@DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:00")" />
+                        </div>
+                        <div class="col-6">
+                            <label for="fin" class="form-label small">Fin</label>
+                            <input type="datetime-local" name="fin" id="fin" class="form-control" required value="@DateTime.Now.AddHours(3).ToString("yyyy-MM-ddTHH:00")" />
+                        </div>
+                    </div>
+                    <p class="small texto-suave">Si el mecánico tiene otra orden que se cruza con ese horario, la asignación se rechaza.</p>
+                    <button class="btn btn-primario w-100">Asignar</button>
+                </form>
+            </div>
+        }
+
+        <!-- Asignaciones -->
+        @if (o.Asignaciones.Count > 0)
+        {
+            <div class="panel mb-4">
+                <h2 class="subtitulo">Asignaciones</h2>
+                @foreach (var a in o.Asignaciones)
+                {
+                    <div class="py-2 border-bottom small">
+                        <strong>@a.MecanicoNombre</strong> @(a.Activa ? "" : "(anterior)")<br />
+                        @Formato.Fecha(a.Inicio) a @a.Fin.ToString("HH:mm")<br />
+                        <span class="texto-suave">Asignado por @a.AsignadoPor</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Seguimiento -->
+        <div class="panel">
+            <h2 class="subtitulo">Seguimiento</h2>
+            <ul class="historial">
+                @foreach (var h in o.Historial.AsEnumerable().Reverse())
+                {
+                    <li>
+                        <div class="fw-semibold">@(h.EstadoAnterior == h.EstadoNuevo ? "Actualización" : Formato.Estado(h.EstadoNuevo))</div>
+                        @if (!string.IsNullOrWhiteSpace(h.Comentario)) { <div>@h.Comentario</div> }
+                        <div class="small texto-suave">@Formato.Fecha(h.Fecha), @h.Usuario</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        // Envía el token de concurrencia (Version) del elemento seleccionado.
+        function enlazarVersion(selectId, hiddenId) {
+            const s = document.getElementById(selectId), h = document.getElementById(hiddenId);
+            if (!s || !h) return;
+            const actualizar = () => { const op = s.options[s.selectedIndex]; h.value = op && op.dataset.version ? op.dataset.version : ''; };
+            s.addEventListener('change', actualizar); actualizar();
+        }
+        enlazarVersion('repuestoId', 'versionRepuesto');
+        enlazarVersion('mecanicoId', 'versionMecanico');
+    </script>
+}

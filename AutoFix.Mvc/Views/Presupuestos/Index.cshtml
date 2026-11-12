@@ -1,0 +1,47 @@
+@model List<PresupuestoVm>
+@{
+    ViewData["Title"] = "Presupuestos";
+    var estado = ViewBag.Estado as string;
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">Presupuestos</h1>
+        <p class="texto-suave mb-0">Se elaboran desde el detalle de una orden en estado En diagnóstico.</p>
+    </div>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4 col-lg-3">
+        <select name="estado" class="form-select" aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            @foreach (var e in Formato.EstadosPresupuesto)
+            {
+                <option value="@e.Valor" selected="@(estado == e.Valor)">@e.Texto</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-primario">Filtrar</button></div>
+</form>
+<div class="tabla">
+    <table class="table table-hover">
+        <thead><tr><th>Orden</th><th>Cliente</th><th>Vehículo</th><th class="text-end">Mano de obra</th><th class="text-end">Repuestos</th><th class="text-end">Total</th><th>Estado</th><th>Creado</th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="8" class="texto-suave p-4">No hay presupuestos con ese filtro.</td></tr>
+        }
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td><a asp-action="Detalle" asp-route-id="@p.Id"><strong>@p.NumeroOrden</strong></a></td>
+                <td>@p.ClienteNombre</td>
+                <td>@p.VehiculoPlaca</td>
+                <td class="text-end">@Formato.Dinero(p.ManoObra)</td>
+                <td class="text-end">@Formato.Dinero(p.TotalRepuestos)</td>
+                <td class="text-end fw-semibold">@Formato.Dinero(p.Total)</td>
+                <td><span class="tag @Formato.ClaseEstado(p.Estado)">@Formato.EstadoPresupuesto(p.Estado)</span></td>
+                <td>@Formato.Dia(p.FechaCreacion)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
