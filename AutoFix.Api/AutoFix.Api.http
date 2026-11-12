@@ -1,0 +1,113 @@
+### =====================================================================
+### AutoFix API - pruebas obligatorias (REST Client de VS / VS Code)
+### 1) Ejecuta "login" de cada rol y copia el token en las variables.
+### =====================================================================
+@api = https://localhost:7180
+@tokenAdmin = PEGAR_TOKEN
+@tokenRecepcion = PEGAR_TOKEN
+@tokenRecepcionLimitada = PEGAR_TOKEN
+@tokenSupervisor = PEGAR_TOKEN
+@tokenCliente = PEGAR_TOKEN
+
+### Login (cambia el correo según el rol)
+POST {{api}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@autofix.com", "password": "Admin#2026" }
+
+### Prueba 1: cliente con dos vehículos (una sola transacción)
+POST {{api}}/api/clientes
+Authorization: Bearer {{tokenRecepcion}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Juan Pérez", "dui": "04567890-1", "telefono": "7222-3344",
+  "correo": "juan.perez@correo.com", "direccion": "Santa Tecla, La Libertad",
+  "vehiculos": [
+    { "placa": "P555-111", "marca": "Nissan", "modelo": "Sentra", "anio": 2019, "color": "Rojo", "numeroChasis": "3N1AB7AP5KY123456" },
+    { "placa": "P555-222", "marca": "Mazda", "modelo": "CX-5", "anio": 2022, "color": "Azul", "numeroChasis": "JM3KFBCM1N0123456" }
+  ]
+}
+
+### Prueba 2: crear orden (queda en Recibido)
+POST {{api}}/api/ordenes
+Authorization: Bearer {{tokenRecepcion}}
+Content-Type: application/json
+
+{ "clienteId": 1, "vehiculoId": 1, "tipoServicio": "Frenos", "descripcionProblema": "Ruido metálico al frenar en bajadas", "fechaEstimadaFinalizacion": "2026-12-20T17:00:00" }
+
+### Prueba 3: asignar mecánico (Supervisor con Ordenes.Asignar)
+POST {{api}}/api/ordenes/1/asignar
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{ "mecanicoId": 1, "inicio": "2026-12-15T08:00:00", "fin": "2026-12-15T12:00:00" }
+
+### Prueba 4: modificar orden SIN permiso (rol correcto pero sin claim Ordenes.Editar) -> 403
+PUT {{api}}/api/ordenes/1
+Authorization: Bearer {{tokenRecepcionLimitada}}
+Content-Type: application/json
+
+{ "descripcionProblema": "Intento de modificación sin permiso", "fechaEstimadaFinalizacion": "2026-12-21T17:00:00" }
+
+### Prueba 4b: el cliente intenta cambiar el estado -> 403
+PATCH {{api}}/api/ordenes/1/estado
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "nuevoEstado": "Cancelado", "comentario": "prueba" }
+
+### Paso previo a presupuesto: iniciar diagnóstico y registrarlo
+PATCH {{api}}/api/ordenes/1/estado
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{ "nuevoEstado": "EnDiagnostico", "comentario": "Inicia revisión" }
+
+###
+PUT {{api}}/api/ordenes/1/diagnostico
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{ "diagnostico": "Pastillas delanteras desgastadas al 90%; discos en buen estado." }
+
+### Prueba 5: crear presupuesto (subtotales y total calculados por la API)
+POST {{api}}/api/ordenes/1/presupuesto
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{ "manoObra": 40.00, "observaciones": "Incluye limpieza de calipers", "detalles": [ { "repuestoId": 2, "cantidad": 1 }, { "repuestoId": 1, "cantidad": 1 } ] }
+
+### Enviar a aprobación
+POST {{api}}/api/presupuestos/1/enviar
+Authorization: Bearer {{tokenSupervisor}}
+
+### Prueba 6: aprobar (Supervisor + claim Ordenes.Aprobar) -> estado Aprobado + descuento de inventario
+POST {{api}}/api/presupuestos/1/aprobar
+Authorization: Bearer {{tokenSupervisor}}
+
+### Prueba 7: fotografía de daños -> usar Swagger o Postman (multipart/form-data: Archivo, Tipo=Dano, Descripcion)
+# POST {{api}}/api/ordenes/1/evidencias
+
+### Prueba 8: descontar repuestos del inventario
+POST {{api}}/api/repuestos/1/salidas
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{ "cantidad": 2, "motivo": "Uso en mantenimiento" }
+
+### Prueba 9: descontar más de lo disponible -> 400 y existencias sin cambio
+POST {{api}}/api/repuestos/3/salidas
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{ "cantidad": 999, "motivo": "Prueba de existencias insuficientes" }
+
+### Prueba 10: concurrencia -> usar herramientas/PruebaConcurrencia (Task.WhenAll) o dos pestañas de Swagger
+
+### Prueba 11: sin JWT -> 401
+GET {{api}}/api/clientes
+
+### Prueba 12: logs de operaciones fallidas (con Correlation ID)
+GET {{api}}/api/logs?soloErrores=true&top=20
+Authorization: Bearer {{tokenAdmin}}
