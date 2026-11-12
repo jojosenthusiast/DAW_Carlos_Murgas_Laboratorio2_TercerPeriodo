@@ -1,0 +1,7 @@
+@{ ViewData["Title"] = "Acceso denegado"; }
+<div class="panel mx-auto mt-4" style="max-width: 640px">
+    <h1 class="titulo mb-2">No tienes permiso para esta acción</h1>
+    <p>Tu rol o tus permisos no permiten realizarla. Si crees que deberías tener acceso, pide al administrador que revise tus permisos.</p>
+    <a href="javascript:history.back()" class="btn btn-secundario">Volver</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primario ms-2">Ir al inicio</a>
+</div>

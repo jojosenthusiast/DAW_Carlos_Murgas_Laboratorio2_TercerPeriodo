@@ -1,0 +1,44 @@
+@model LoginVm
+@{ ViewData["Title"] = "Iniciar sesión"; }
+<div class="acceso">
+    <section class="lado">
+        <div>
+            <h1>AutoFix</h1>
+            <p class="mt-3">Recepción, diagnóstico, presupuestos e inventario del taller en un solo lugar. Los clientes siguen aquí el avance de su vehículo.</p>
+        </div>
+        <div class="usuarios-prueba">
+            <p class="mb-1">Usuarios de prueba (ver README):</p>
+            <div><code>admin@autofix.com</code> / <code>Admin#2026</code></div>
+            <div><code>supervisor@autofix.com</code> / <code>Supervisor#2026</code></div>
+            <div><code>recepcion@autofix.com</code> / <code>Recepcion#2026</code></div>
+            <div><code>mecanico1@autofix.com</code> / <code>Mecanico#2026</code></div>
+            <div><code>cliente@autofix.com</code> / <code>Cliente#2026</code></div>
+        </div>
+    </section>
+    <section class="formulario">
+        <div>
+            <h2 class="titulo mb-1">Iniciar sesión</h2>
+            <p class="texto-suave mb-4">Usa el correo con el que te registraron en el taller.</p>
+            @if (ViewBag.Aviso is string aviso)
+            {
+                <div class="alert aviso-alerta">@aviso</div>
+            }
+            <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <button type="submit" class="btn btn-primario w-100 py-2">Entrar</button>
+            </form>
+            <p class="mt-4 mb-0">¿Eres cliente y aún no tienes cuenta? <a asp-action="Registro">Crea tu cuenta</a></p>
+        </div>
+    </section>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

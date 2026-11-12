@@ -1,0 +1,96 @@
+@model DashboardVm
+@{
+    ViewData["Title"] = "Inicio";
+    var esCliente = User.IsInRole(Roles.Cliente);
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">@(esCliente ? "Tus reparaciones" : "Resumen del taller")</h1>
+        <p class="texto-suave mb-0">@DateTime.Now.ToString("dddd dd 'de' MMMM, yyyy", new System.Globalization.CultureInfo("es"))</p>
+    </div>
+    @if (User.Puede(Permisos.OrdenesCrear))
+    {
+        <a asp-controller="Ordenes" asp-action="Crear" class="btn btn-senal"><i class="bi bi-plus-lg me-1"></i>Nueva orden</a>
+    }
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="cifra destacada"><div class="valor">@Model.OrdenesActivas</div><div class="etiqueta">Órdenes en proceso</div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.PresupuestosPendientes</div><div class="etiqueta">Presupuestos por aprobar</div></div></div>
+    @if (esCliente)
+    {
+        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.TotalVehiculos</div><div class="etiqueta">Vehículos registrados</div></div></div>
+        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.OrdenesFinalizadasMes</div><div class="etiqueta">Finalizadas este mes</div></div></div>
+    }
+    else
+    {
+        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.AsignacionesHoy</div><div class="etiqueta">Asignaciones para hoy</div></div></div>
+        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Formato.Dinero(Model.MontoAprobadoMes)</div><div class="etiqueta">Aprobado este mes</div></div></div>
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel h-100">
+            <h2 class="subtitulo">Órdenes recientes</h2>
+            @if (Model.OrdenesRecientes.Count == 0)
+            {
+                <p class="texto-suave mb-0">@(esCliente ? "Aún no tienes reparaciones registradas." : "No hay órdenes registradas. Crea la primera desde recepción.")</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Orden</th><th>Vehículo</th><th>Servicio</th><th>Estado</th><th>Entrega estimada</th></tr></thead>
+                        <tbody>
+                        @foreach (var o in Model.OrdenesRecientes)
+                        {
+                            <tr>
+                                <td><a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@o.Id">@o.NumeroOrden</a></td>
+                                <td>@o.VehiculoPlaca <span class="texto-suave small">@o.VehiculoDescripcion</span></td>
+                                <td>@Formato.Servicio(o.TipoServicio)</td>
+                                <td><partial name="_Estado" model="o.Estado" /></td>
+                                <td>@Formato.Dia(o.FechaEstimadaFinalizacion)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel mb-4">
+            <h2 class="subtitulo">Órdenes por estado</h2>
+            @if (Model.OrdenesPorEstado.Count == 0)
+            {
+                <p class="texto-suave mb-0">Sin datos todavía.</p>
+            }
+            @foreach (var e in Model.OrdenesPorEstado)
+            {
+                <div class="d-flex justify-content-between align-items-center py-1">
+                    <partial name="_Estado" model="e.Estado" />
+                    <strong>@e.Cantidad</strong>
+                </div>
+            }
+        </div>
+        @if (!esCliente)
+        {
+            <div class="panel">
+                <h2 class="subtitulo">Stock mínimo alcanzado</h2>
+                @if (Model.RepuestosEnAlerta.Count == 0)
+                {
+                    <p class="texto-suave mb-0">Todos los repuestos están por encima del mínimo.</p>
+                }
+                @foreach (var r in Model.RepuestosEnAlerta)
+                {
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <a asp-controller="Inventario" asp-action="Detalle" asp-route-id="@r.Id">@r.Nombre</a>
+                        <span class="tag tag-ambar">@r.Existencias / mín. @r.StockMinimo</span>
+                    </div>
+                }
+                <p class="small texto-suave mt-3 mb-0">@Model.TotalClientes clientes, @Model.TotalVehiculos vehículos y @Model.MecanicosActivos mecánicos activos.</p>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] | AutoFix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+@{
+    var autenticado = User.Identity?.IsAuthenticated == true;
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Activo(string c) => controlador == c ? "active" : "";
+}
+@if (autenticado)
+{
+    <nav class="navbar navbar-expand-lg barra">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand marca" asp-controller="Home" asp-action="Index">AutoFix</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
+                <i class="bi bi-list text-white fs-3"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="menu">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link @Activo("Home")" asp-controller="Home" asp-action="Index">Inicio</a></li>
+                    @if (User.IsInRole(Roles.Cliente))
+                    {
+                        <li class="nav-item"><a class="nav-link @Activo("Vehiculos")" asp-controller="Vehiculos" asp-action="Index">Mis vehículos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Ordenes")" asp-controller="Ordenes" asp-action="Index">Mis reparaciones</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Clientes")" asp-controller="Clientes" asp-action="MiPerfil">Mis datos</a></li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link @Activo("Clientes")" asp-controller="Clientes" asp-action="Index">Clientes</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Vehiculos")" asp-controller="Vehiculos" asp-action="Index">Vehículos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Ordenes")" asp-controller="Ordenes" asp-action="Index">Órdenes</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Presupuestos")" asp-controller="Presupuestos" asp-action="Index">Presupuestos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Mecanicos")" asp-controller="Mecanicos" asp-action="Index">Mecánicos</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle @(controlador is "Inventario" or "Movimientos" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Inventario</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Inventario" asp-action="Index">Repuestos</a></li>
+                                <li><a class="dropdown-item" asp-controller="Movimientos" asp-action="Index">Entradas y salidas</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link @Activo("Evidencias")" asp-controller="Evidencias" asp-action="Index">Evidencias</a></li>
+                        @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Supervisor) || User.IsInRole(Roles.Recepcionista))
+                        {
+                            <li class="nav-item"><a class="nav-link @Activo("Reportes")" asp-controller="Reportes" asp-action="Index">Reportes</a></li>
+                        }
+                    }
+                </ul>
+                <div class="d-flex align-items-center gap-3 usuario">
+                    <span class="text-white-50 small d-none d-xl-inline">@User.Identity!.Name</span>
+                    <span class="rol">@Formato.RolTexto(User.Rol())</span>
+                    <form asp-controller="Cuenta" asp-action="Salir" method="post" class="m-0">
+                        <button type="submit" class="btn btn-sm btn-salir">Cerrar sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+}
+<main class="@(autenticado ? "container-fluid px-lg-4 py-4" : "")">
+    <partial name="_Alertas" />
+    @RenderBody()
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

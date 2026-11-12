@@ -1,0 +1,9 @@
+@model ErrorApiVm
+@{ ViewData["Title"] = "No se pudo completar"; }
+<div class="panel mx-auto mt-4" style="max-width: 640px">
+    <h1 class="titulo">No se pudo completar la operación</h1>
+    <p class="mb-2">@Model.Mensaje</p>
+    <p class="texto-suave small mb-4">Código de respuesta: @Model.Status</p>
+    <a href="javascript:history.back()" class="btn btn-secundario">Volver</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primario ms-2">Ir al inicio</a>
+</div>
