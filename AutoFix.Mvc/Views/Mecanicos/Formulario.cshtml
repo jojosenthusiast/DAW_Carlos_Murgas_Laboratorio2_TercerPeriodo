@@ -1,0 +1,46 @@
+@model MecanicoFormVm
+@{
+    var editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar mecánico" : "Registrar mecánico";
+}
+<div class="encabezado"><h1 class="titulo">@ViewData["Title"]</h1></div>
+<div class="panel" style="max-width: 720px">
+    <form asp-action="@(editando ? "Editar" : "Crear")" asp-route-id="@Model.Id" method="post" novalidate>
+        <input type="hidden" asp-for="Version" />
+        <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="NombreCompleto" class="form-label"></label>
+            <input asp-for="NombreCompleto" class="form-control" />
+            <span asp-validation-for="NombreCompleto"></span>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="Especialidad" class="form-label"></label>
+                <input asp-for="Especialidad" class="form-control" />
+                <span asp-validation-for="Especialidad"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Telefono" class="form-label"></label>
+                <input asp-for="Telefono" class="form-control" />
+                <span asp-validation-for="Telefono"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email"></span>
+        </div>
+        @if (!editando)
+        {
+            <div class="mb-4">
+                <label asp-for="PasswordUsuario" class="form-label"></label>
+                <input asp-for="PasswordUsuario" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="PasswordUsuario"></span>
+                <div class="form-text">Si la escribes, se crea un usuario con rol Mecánico usando el correo anterior.</div>
+            </div>
+        }
+        <button type="submit" class="btn btn-primario">@(editando ? "Guardar cambios" : "Registrar mecánico")</button>
+        <a asp-action="Index" class="btn btn-secundario ms-2">Cancelar</a>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

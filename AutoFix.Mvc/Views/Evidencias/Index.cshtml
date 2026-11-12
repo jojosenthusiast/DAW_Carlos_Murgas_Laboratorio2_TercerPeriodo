@@ -1,0 +1,54 @@
+@model List<EvidenciaVm>
+@{
+    ViewData["Title"] = "Evidencias";
+    var tipo = ViewBag.Tipo as string;
+    var ordenId = ViewBag.OrdenId as int?;
+    var puedeEliminar = User.IsInRole(Roles.Supervisor) || User.IsInRole(Roles.Administrador);
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">Fotografías de reparaciones</h1>
+        <p class="texto-suave mb-0">Vehículos al ingresar, daños, repuestos utilizados y reparaciones finalizadas.</p>
+    </div>
+    <a asp-action="Subir" asp-route-ordenId="@ordenId" class="btn btn-senal"><i class="bi bi-camera me-1"></i>Subir fotografía</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <input type="number" name="ordenId" value="@ordenId" min="1" class="form-control" placeholder="Id de orden" aria-label="Id de orden" />
+    </div>
+    <div class="col-md-3">
+        <select name="tipo" class="form-select" aria-label="Tipo de evidencia">
+            <option value="">Todos los tipos</option>
+            @foreach (var t in Formato.TiposEvidencia)
+            {
+                <option value="@t.Valor" selected="@(tipo == t.Valor)">@t.Texto</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-primario">Filtrar</button></div>
+</form>
+@if (Model.Count == 0)
+{
+    <div class="panel texto-suave">No hay fotografías con ese filtro.</div>
+}
+<div class="galeria">
+    @foreach (var e in Model)
+    {
+        <figure class="foto m-0">
+            <a href="@Rutas.Imagen(e.Ruta)" target="_blank" rel="noopener"><img src="@Rutas.Imagen(e.Ruta)" alt="@Formato.Evidencia(e.Tipo) de la orden @e.NumeroOrden" loading="lazy" /></a>
+            <figcaption class="pie">
+                <a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@e.OrdenId"><strong>@e.NumeroOrden</strong></a><br />
+                @Formato.Evidencia(e.Tipo)<br />
+                @if (!string.IsNullOrWhiteSpace(e.Descripcion)) { <text>@e.Descripcion<br /></text> }
+                <span class="texto-suave">@Formato.Fecha(e.FechaSubida), @Formato.Tamano(e.TamanoBytes)</span>
+                <div class="small texto-suave text-break">@e.Ruta</div>
+                @if (puedeEliminar)
+                {
+                    <form asp-action="Eliminar" asp-route-id="@e.Id" asp-route-ordenId="@ordenId" method="post" class="mt-2" data-confirmar="¿Eliminar esta fotografía?">
+                        <button class="btn btn-sm btn-peligro">Eliminar</button>
+                    </form>
+                }
+            </figcaption>
+        </figure>
+    }
+</div>

@@ -1,0 +1,69 @@
+@model List<MovimientoVm>
+@{
+    ViewData["Title"] = "Entradas y salidas";
+    var repuestos = (List<RepuestoVm>)ViewBag.Repuestos;
+    var repuestoId = ViewBag.RepuestoId as int?;
+    var tipo = ViewBag.Tipo as string;
+    var desde = ViewBag.Desde as DateTime?;
+    var hasta = ViewBag.Hasta as DateTime?;
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">Entradas y salidas de inventario</h1>
+        <p class="texto-suave mb-0">Para registrar un movimiento, abre el repuesto desde Inventario.</p>
+    </div>
+</div>
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4">
+        <label class="form-label small" for="repuestoId">Repuesto</label>
+        <select name="repuestoId" id="repuestoId" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var r in repuestos)
+            {
+                <option value="@r.Id" selected="@(repuestoId == r.Id)">@r.Codigo, @r.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="tipo">Tipo</label>
+        <select name="tipo" id="tipo" class="form-select">
+            <option value="">Ambos</option>
+            <option value="Entrada" selected="@(tipo == "Entrada")">Entradas</option>
+            <option value="Salida" selected="@(tipo == "Salida")">Salidas</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="desde">Desde</label>
+        <input type="date" name="desde" id="desde" class="form-control" value="@desde?.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="hasta">Hasta</label>
+        <input type="date" name="hasta" id="hasta" class="form-control" value="@hasta?.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-2"><button class="btn btn-primario w-100">Filtrar</button></div>
+</form>
+<div class="tabla">
+    <table class="table table-hover table-sm">
+        <thead><tr><th>Fecha</th><th>Repuesto</th><th>Tipo</th><th class="text-end">Cantidad</th><th class="text-end">Antes</th><th class="text-end">Después</th><th>Motivo</th><th>Orden</th><th>Usuario</th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="9" class="texto-suave p-4">No hay movimientos con ese filtro.</td></tr>
+        }
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td class="text-nowrap">@Formato.Fecha(m.Fecha)</td>
+                <td><a asp-controller="Inventario" asp-action="Detalle" asp-route-id="@m.RepuestoId">@m.RepuestoCodigo</a> <span class="small texto-suave">@m.RepuestoNombre</span></td>
+                <td><span class="tag @(m.Tipo == "Entrada" ? "tag-verde-claro" : "tag-azul")">@m.Tipo</span></td>
+                <td class="text-end">@m.Cantidad</td>
+                <td class="text-end">@m.ExistenciaAnterior</td>
+                <td class="text-end">@m.ExistenciaNueva</td>
+                <td>@m.Motivo</td>
+                <td>@if (m.OrdenId.HasValue) { <a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@m.OrdenId">@(m.NumeroOrden ?? "Ver")</a> }</td>
+                <td class="small">@m.Usuario</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

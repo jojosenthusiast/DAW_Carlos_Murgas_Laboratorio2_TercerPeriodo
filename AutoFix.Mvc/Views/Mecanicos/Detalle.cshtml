@@ -1,0 +1,72 @@
+@model List<AsignacionVm>
+@{
+    var m = (MecanicoVm)ViewBag.Mecanico;
+    var disp = ViewBag.Disponibilidad as DisponibilidadVm;
+    var inicio = ViewBag.Inicio as DateTime? ?? DateTime.Now.AddHours(1);
+    var fin = ViewBag.Fin as DateTime? ?? DateTime.Now.AddHours(3);
+    ViewData["Title"] = m.NombreCompleto;
+}
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">@m.NombreCompleto</h1>
+        <p class="texto-suave mb-0">@m.Especialidad. @m.Telefono, @m.Email</p>
+    </div>
+    <span class="tag @(m.Activo ? "tag-verde-claro" : "tag-gris")">@(m.Activo ? "Activo" : "Inactivo")</span>
+</div>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel">
+            <h2 class="subtitulo">Consultar disponibilidad</h2>
+            <form method="get" asp-action="Detalle" asp-route-id="@m.Id">
+                <label for="inicio" class="form-label">Inicio</label>
+                <input type="datetime-local" id="inicio" name="inicio" class="form-control mb-2" value="@inicio.ToString("yyyy-MM-ddTHH:mm")" required />
+                <label for="fin" class="form-label">Fin</label>
+                <input type="datetime-local" id="fin" name="fin" class="form-control mb-3" value="@fin.ToString("yyyy-MM-ddTHH:mm")" required />
+                <button class="btn btn-primario w-100">Consultar</button>
+            </form>
+            @if (disp is not null)
+            {
+                <div class="alert @(disp.Disponible ? "aviso-ok" : "aviso-error") mt-3 mb-0">
+                    @if (disp.Disponible)
+                    {
+                        <span>Disponible en ese horario.</span>
+                    }
+                    else
+                    {
+                        <span>No disponible. Se cruza con:</span>
+                        <ul class="mb-0">
+                            @foreach (var c in disp.Conflictos)
+                            {
+                                <li>@c.NumeroOrden, @Formato.Fecha(c.Inicio) a @c.Fin.ToString("HH:mm")</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <h2 class="subtitulo">Asignaciones</h2>
+        <div class="tabla">
+            <table class="table">
+                <thead><tr><th>Orden</th><th>Inicio</th><th>Fin</th><th>Asignado por</th><th>Estado</th></tr></thead>
+                <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="5" class="texto-suave p-4">Sin asignaciones registradas.</td></tr>
+                }
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td><a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@a.OrdenId">@a.NumeroOrden</a></td>
+                        <td>@Formato.Fecha(a.Inicio)</td>
+                        <td>@Formato.Fecha(a.Fin)</td>
+                        <td class="small">@a.AsignadoPor</td>
+                        <td><span class="tag @(a.Activa ? "tag-azul" : "tag-gris")">@(a.Activa ? "Vigente" : "Cerrada")</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

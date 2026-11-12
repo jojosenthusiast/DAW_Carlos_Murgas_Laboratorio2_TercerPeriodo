@@ -1,0 +1,45 @@
+@model List<MecanicoVm>
+@{ ViewData["Title"] = "Mecánicos"; var admin = User.IsInRole(Roles.Administrador); }
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">Mecánicos</h1>
+        <p class="texto-suave mb-0">Las asignaciones se hacen desde el detalle de cada orden.</p>
+    </div>
+    @if (admin)
+    {
+        <a asp-action="Crear" class="btn btn-senal"><i class="bi bi-plus-lg me-1"></i>Registrar mecánico</a>
+    }
+</div>
+<div class="tabla">
+    <table class="table table-hover">
+        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Teléfono</th><th>Correo</th><th class="text-center">Asignaciones pendientes</th><th>Acceso</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="8" class="texto-suave p-4">No hay mecánicos registrados.</td></tr>
+        }
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td><a asp-action="Detalle" asp-route-id="@m.Id">@m.NombreCompleto</a></td>
+                <td>@m.Especialidad</td>
+                <td>@m.Telefono</td>
+                <td>@m.Email</td>
+                <td class="text-center">@m.AsignacionesActivas</td>
+                <td>@(m.TieneUsuario ? "Con usuario" : "Sin usuario")</td>
+                <td><span class="tag @(m.Activo ? "tag-verde-claro" : "tag-gris")">@(m.Activo ? "Activo" : "Inactivo")</span></td>
+                <td class="text-end text-nowrap">
+                    @if (admin)
+                    {
+                        <a asp-action="Editar" asp-route-id="@m.Id" class="btn btn-sm btn-secundario">Editar</a>
+                        <form asp-action="Estado" asp-route-id="@m.Id" method="post" class="d-inline">
+                            <input type="hidden" name="activo" value="@((!m.Activo).ToString().ToLowerInvariant())" />
+                            <button class="btn btn-sm @(m.Activo ? "btn-peligro" : "btn-primario")">@(m.Activo ? "Desactivar" : "Activar")</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
