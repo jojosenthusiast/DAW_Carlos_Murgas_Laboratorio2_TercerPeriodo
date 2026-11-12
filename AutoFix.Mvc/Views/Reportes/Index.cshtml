@@ -1,0 +1,102 @@
+@model ReportesPaginaVm
+@{ ViewData["Title"] = "Reportes"; }
+<div class="encabezado">
+    <h1 class="titulo">Reportes del taller</h1>
+    <a asp-action="Logs" class="btn btn-secundario"><i class="bi bi-journal-text me-1"></i>Bitácora de solicitudes</a>
+</div>
+<form method="get" class="row g-2 mb-4 align-items-end">
+    <div class="col-auto">
+        <label for="desde" class="form-label small">Desde</label>
+        <input type="date" id="desde" name="desde" class="form-control" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-auto">
+        <label for="hasta" class="form-label small">Hasta</label>
+        <input type="date" id="hasta" name="hasta" class="form-control" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-auto"><button class="btn btn-primario">Actualizar</button></div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="cifra destacada"><div class="valor">@Model.Ordenes.Total</div><div class="etiqueta">Órdenes en el periodo</div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Formato.Dinero(Model.Ordenes.MontoAprobado)</div><div class="etiqueta">Presupuestos aprobados</div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Formato.Dinero(Model.Inventario.ValorInventario)</div><div class="etiqueta">Valor del inventario</div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.Inventario.EnAlerta</div><div class="etiqueta">Repuestos en stock mínimo</div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="panel h-100">
+            <h2 class="subtitulo">Órdenes por estado</h2>
+            @foreach (var e in Model.Ordenes.PorEstado)
+            {
+                <div class="d-flex justify-content-between py-1"><partial name="_Estado" model="e.Estado" /><strong>@e.Cantidad</strong></div>
+            }
+            @if (Model.Ordenes.PorEstado.Count == 0) { <p class="texto-suave mb-0">Sin órdenes en el periodo.</p> }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel h-100">
+            <h2 class="subtitulo">Servicios más solicitados</h2>
+            @foreach (var s in Model.Ordenes.PorServicio)
+            {
+                <div class="d-flex justify-content-between py-1"><span>@Formato.Servicio(s.Servicio)</span><strong>@s.Cantidad</strong></div>
+            }
+            @if (Model.Ordenes.PorServicio.Count == 0) { <p class="texto-suave mb-0">Sin datos.</p> }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel h-100">
+            <h2 class="subtitulo">Repuestos más utilizados</h2>
+            <p class="small texto-suave">Entradas: @Model.Inventario.Entradas unidades. Salidas: @Model.Inventario.Salidas unidades.</p>
+            @foreach (var c in Model.Inventario.MasUtilizados)
+            {
+                <div class="d-flex justify-content-between py-1"><span>@c.Codigo, @c.Nombre</span><strong>@c.CantidadSalida</strong></div>
+            }
+            @if (Model.Inventario.MasUtilizados.Count == 0) { <p class="texto-suave mb-0">Sin salidas en el periodo.</p> }
+        </div>
+    </div>
+</div>
+
+<h2 class="subtitulo">Carga de trabajo por mecánico</h2>
+<div class="tabla mb-4">
+    <table class="table">
+        <thead><tr><th>Mecánico</th><th class="text-center">Órdenes en proceso</th><th class="text-center">Finalizadas o entregadas</th><th class="text-center">Asignaciones pendientes</th><th>Estado</th></tr></thead>
+        <tbody>
+        @foreach (var m in Model.Mecanicos)
+        {
+            <tr>
+                <td><a asp-controller="Mecanicos" asp-action="Detalle" asp-route-id="@m.MecanicoId">@m.Nombre</a></td>
+                <td class="text-center">@m.OrdenesActivas</td>
+                <td class="text-center">@m.OrdenesFinalizadas</td>
+                <td class="text-center">@m.AsignacionesFuturas</td>
+                <td>@(m.Activo ? "Activo" : "Inactivo")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<h2 class="subtitulo">Órdenes del periodo</h2>
+<div class="tabla">
+    <table class="table table-sm">
+        <thead><tr><th>Orden</th><th>Cliente</th><th>Vehículo</th><th>Servicio</th><th>Estado</th><th>Mecánico</th><th>Ingreso</th></tr></thead>
+        <tbody>
+        @if (Model.Ordenes.Ordenes.Count == 0)
+        {
+            <tr><td colspan="7" class="texto-suave p-4">Sin órdenes en el periodo.</td></tr>
+        }
+        @foreach (var o in Model.Ordenes.Ordenes)
+        {
+            <tr>
+                <td><a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@o.Id">@o.NumeroOrden</a></td>
+                <td>@o.ClienteNombre</td>
+                <td>@o.VehiculoPlaca</td>
+                <td>@Formato.Servicio(o.TipoServicio)</td>
+                <td><partial name="_Estado" model="o.Estado" /></td>
+                <td>@(o.MecanicoNombre ?? "Sin asignar")</td>
+                <td>@Formato.Dia(o.FechaIngreso)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
