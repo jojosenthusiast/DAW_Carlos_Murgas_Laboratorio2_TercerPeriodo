@@ -1,0 +1,45 @@
+﻿AutoFix - pruebas automáticas (todo) contra https://localhost:7180/
+Fecha: 2026-11-12 17:45:02
+
+======================================================================
+PRUEBAS OBLIGATORIAS
+======================================================================
+[ OK ] 11. Acceso a la API sin JWT -> 401  ->  HTTP 401: Debes enviar un token JWT válido (Authorization: Bearer ...).
+[ OK ] Login con contraseña incorrecta -> 401  ->  HTTP 401: Correo o contraseña incorrectos.
+[ OK ] Inicio de sesión de cada rol (JWT emitido)  ->  Administrador, Recepcionista, Supervisor, Mecánico y Cliente
+[ OK ] 1. Registrar un cliente con dos vehículos  ->  HTTP 201
+[ OK ] 2. Crear una orden de reparación (Recibido)  ->  HTTP 201
+[ OK ] Orden duplicada (mismo vehículo y servicio) -> 409  ->  HTTP 409: Ya existe la orden activa OT-2026-00001 para el vehículo PR397173A con el servicio Frenos. No se permiten órdenes duplicadas.
+[ OK ] 3. Asignar un mecánico  ->  HTTP 200
+[ OK ] 4. Modificar una orden sin permisos -> 403 (claim)  ->  HTTP 403: No tienes el rol o el permiso (claim) necesario para esta acción.
+[ OK ] 4b. Un cliente intenta cambiar el estado -> 403 (rol)  ->  HTTP 403: No tienes el rol o el permiso (claim) necesario para esta acción.
+[ OK ] Estado En diagnóstico y diagnóstico registrado  ->  HTTP 200 / HTTP 200
+[ OK ] 5. Crear un presupuesto (subtotal y total)  ->  HTTP 201; total 57.0 (esperado 57.00)
+[ OK ] Aprobar con usuario sin permiso -> 403  ->  HTTP 403: No tienes el rol o el permiso (claim) necesario para esta acción.
+[ OK ] 6. Aprobar el presupuesto (estado Aprobado)  ->  HTTP 200
+[ OK ] Al aprobar se descuenta el inventario automáticamente  ->  existencias 25 -> 23
+[ OK ] 7. Registrar fotografía (ruta guardada y archivo servido)  ->  HTTP 201; ruta uploads/evidencias/a07b12f5-4a37-43fd-810b-90bd416fa7e8.png
+[ OK ] Imagen con formato inválido (.txt) -> 400  ->  HTTP 400: Solo se permiten JPG, JPEG y PNG.
+[ OK ] Archivo .png con contenido falso -> 400  ->  HTTP 400: El contenido del archivo no corresponde a una imagen JPG/PNG válida.
+[ OK ] Imagen mayor a 5 MB -> rechazada (400/413)  ->  HTTP 400: La imagen no puede superar 5 MB.
+[ OK ] 8. Descontar repuestos (existencias + movimiento)  ->  HTTP 200
+[ OK ] 9. Descontar más de lo disponible -> error y sin cambios  ->  HTTP 400: Existencias insuficientes de FIL-ACE-001 - Filtro de aceite: disponibles 22, solicitadas 23.; existencias 22 -> 22
+[ OK ] Flujo completo: En reparación -> Finalizado -> Entregado  ->  200/200/200
+[ OK ] Saltar pasos de estado -> 400  ->  HTTP 400: No se puede pasar de Entregado a EnDiagnostico. Siguiente(s) estado(s) válido(s): ninguno.
+[ OK ] Cliente no puede ver órdenes ajenas -> 403  ->  HTTP 403: No tienes permiso para acceder a esta orden.
+[ OK ] 12. Log de operación fallida (usuario, endpoint, código y Correlation ID)  ->  PUT /api/ordenes/1 -> 403 | PRUEBA-559d658aefb143b7b022e425362f8f4f
+
+======================================================================
+10. CONCURRENCIA
+======================================================================
+   Petición A1 -> HTTP 200 | Correlation ID CONC-A1-397173
+   Petición A2 -> HTTP 409: El repuesto fue modificado por otro usuario después de que lo consultaste. Recarga los datos e intenta de nuevo. | Correlation ID CONC-A2-397173
+[ OK ] Escenario A: solo una salida se aplica; la otra recibe 409  ->  códigos 200 y 409; existencias finales 0 (nunca negativas)
+   Petición B1 -> HTTP 409: El mecánico fue modificado por otro usuario después de que lo consultaste. Recarga los datos e intenta de nuevo. | Correlation ID CONC-B1-397173
+   Petición B2 -> HTTP 200 | Correlation ID CONC-B2-397173
+[ OK ] Escenario B: solo una asignación se aplica; la otra recibe 409  ->  códigos 409 y 200
+
+======================================================================
+RESUMEN
+======================================================================
+26 de 26 verificaciones correctas.
