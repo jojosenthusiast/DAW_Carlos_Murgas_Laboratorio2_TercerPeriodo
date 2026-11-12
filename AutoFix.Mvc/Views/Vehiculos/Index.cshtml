@@ -1,0 +1,46 @@
+@model List<VehiculoVm>
+@{
+    var esCliente = User.IsInRole(Roles.Cliente);
+    ViewData["Title"] = esCliente ? "Mis vehículos" : "Vehículos";
+}
+<div class="encabezado">
+    <h1 class="titulo">@ViewData["Title"]</h1>
+    @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Recepcionista))
+    {
+        <a asp-action="Crear" class="btn btn-senal"><i class="bi bi-plus-lg me-1"></i>Registrar vehículo</a>
+    }
+</div>
+@if (!esCliente)
+{
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-6 col-lg-4">
+            <input type="search" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Placa, marca, modelo o propietario" aria-label="Buscar vehículo" />
+        </div>
+        <div class="col-auto"><button class="btn btn-primario">Buscar</button></div>
+    </form>
+}
+<div class="tabla">
+    <table class="table table-hover">
+        <thead><tr><th>Placa</th><th>Vehículo</th><th>Color</th><th>Chasis</th>@if (!esCliente){<th>Propietario</th>}<th>Foto</th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="6" class="texto-suave p-4">No hay vehículos para mostrar.</td></tr>
+        }
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td><a asp-action="Detalle" asp-route-id="@v.Id"><strong>@v.Placa</strong></a></td>
+                <td>@v.Marca @v.Modelo @v.Anio</td>
+                <td>@v.Color</td>
+                <td class="small">@v.NumeroChasis</td>
+                @if (!esCliente)
+                {
+                    <td><a asp-controller="Clientes" asp-action="Detalle" asp-route-id="@v.ClienteId">@v.ClienteNombre</a></td>
+                }
+                <td>@(v.FotoRuta is null ? "No" : "Sí")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

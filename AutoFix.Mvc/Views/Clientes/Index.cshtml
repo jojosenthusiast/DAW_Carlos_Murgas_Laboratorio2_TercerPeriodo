@@ -1,0 +1,42 @@
+@model List<ClienteVm>
+@{ ViewData["Title"] = "Clientes"; }
+<div class="encabezado">
+    <h1 class="titulo">Clientes</h1>
+    @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Recepcionista))
+    {
+        <a asp-action="Crear" class="btn btn-senal"><i class="bi bi-person-plus me-1"></i>Registrar cliente</a>
+    }
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-6 col-lg-4">
+        <input type="search" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Nombre, DUI, correo o teléfono" aria-label="Buscar cliente" />
+    </div>
+    <div class="col-auto"><button class="btn btn-primario">Buscar</button></div>
+</form>
+<div class="tabla">
+    <table class="table table-hover">
+        <thead><tr><th>Nombre</th><th>DUI</th><th>Teléfono</th><th>Correo</th><th class="text-center">Vehículos</th><th></th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="6" class="texto-suave p-4">No se encontraron clientes con ese criterio.</td></tr>
+        }
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td><a asp-action="Detalle" asp-route-id="@c.Id">@c.NombreCompleto</a></td>
+                <td>@c.Dui</td>
+                <td>@c.Telefono</td>
+                <td>@c.Correo</td>
+                <td class="text-center">@c.CantidadVehiculos</td>
+                <td class="text-end">
+                    @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Recepcionista))
+                    {
+                        <a asp-action="Editar" asp-route-id="@c.Id" class="btn btn-sm btn-secundario">Editar</a>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

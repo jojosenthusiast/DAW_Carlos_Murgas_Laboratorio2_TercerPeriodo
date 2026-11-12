@@ -1,0 +1,60 @@
+@model VehiculoVm
+@{ ViewData["Title"] = $"Vehículo {Model.Placa}"; }
+<div class="encabezado">
+    <div>
+        <h1 class="titulo">@Model.Placa</h1>
+        <p class="texto-suave mb-0">@Model.Marca @Model.Modelo @Model.Anio, @Model.Color</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Recepcionista))
+        {
+            <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-secundario">Editar</a>
+        }
+        @if (User.Puede(Permisos.OrdenesCrear))
+        {
+            <a asp-controller="Ordenes" asp-action="Crear" asp-route-clienteId="@Model.ClienteId" asp-route-vehiculoId="@Model.Id" class="btn btn-senal">Nueva orden</a>
+        }
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="panel">
+            @if (Rutas.Imagen(Model.FotoRuta) is string url)
+            {
+                <img src="@url" class="miniatura mb-3" alt="Fotografía del vehículo @Model.Placa" />
+            }
+            else
+            {
+                <div class="sin-foto mb-3"><span><i class="bi bi-camera me-2"></i>Sin fotografía</span></div>
+            }
+            @if (User.EsPersonal())
+            {
+                <form asp-action="Foto" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                    <label for="archivo" class="form-label">Fotografía del vehículo (JPG o PNG, máx. 5 MB)</label>
+                    <input type="file" id="archivo" name="archivo" class="form-control mb-2" accept=".jpg,.jpeg,.png" required />
+                    <button class="btn btn-primario btn-sm">Subir fotografía</button>
+                </form>
+            }
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="panel">
+            <h2 class="subtitulo">Ficha</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Propietario</dt>
+                <dd class="col-sm-8"><a asp-controller="Clientes" asp-action="Detalle" asp-route-id="@Model.ClienteId">@Model.ClienteNombre</a></dd>
+                <dt class="col-sm-4">Marca y modelo</dt><dd class="col-sm-8">@Model.Marca @Model.Modelo</dd>
+                <dt class="col-sm-4">Año</dt><dd class="col-sm-8">@Model.Anio</dd>
+                <dt class="col-sm-4">Color</dt><dd class="col-sm-8">@Model.Color</dd>
+                <dt class="col-sm-4">Número de chasis</dt><dd class="col-sm-8">@Model.NumeroChasis</dd>
+                <dt class="col-sm-4">Registrado</dt><dd class="col-sm-8">@Formato.Fecha(Model.FechaRegistro)</dd>
+            </dl>
+        </div>
+        @if (User.IsInRole(Roles.Administrador))
+        {
+            <form asp-action="Eliminar" asp-route-id="@Model.Id" asp-route-clienteId="@Model.ClienteId" method="post" class="mt-3" data-confirmar="¿Eliminar este vehículo? Solo es posible si no tiene órdenes.">
+                <button class="btn btn-peligro">Eliminar vehículo</button>
+            </form>
+        }
+    </div>
+</div>

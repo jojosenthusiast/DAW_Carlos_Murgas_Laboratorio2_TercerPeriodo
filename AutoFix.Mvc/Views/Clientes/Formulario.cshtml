@@ -1,0 +1,41 @@
+@model ClienteFormVm
+@{
+    var editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar cliente" : "Registrar cliente";
+}
+<div class="encabezado"><h1 class="titulo">@ViewData["Title"]</h1></div>
+<div class="panel" style="max-width: 760px">
+    <form asp-action="@(editando ? "Editar" : "Crear")" asp-route-id="@Model.Id" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="NombreCompleto" class="form-label"></label>
+            <input asp-for="NombreCompleto" class="form-control" />
+            <span asp-validation-for="NombreCompleto"></span>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="Dui" class="form-label"></label>
+                <input asp-for="Dui" class="form-control" placeholder="01234567-8" />
+                <span asp-validation-for="Dui"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Telefono" class="form-label"></label>
+                <input asp-for="Telefono" class="form-control" placeholder="7000-0000" />
+                <span asp-validation-for="Telefono"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Correo" class="form-label"></label>
+            <input asp-for="Correo" class="form-control" />
+            <span asp-validation-for="Correo"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="Direccion" class="form-label"></label>
+            <input asp-for="Direccion" class="form-control" />
+            <span asp-validation-for="Direccion"></span>
+        </div>
+        <button type="submit" class="btn btn-primario">@(editando ? "Guardar cambios" : "Registrar cliente")</button>
+        <a asp-action="@(editando ? "Detalle" : "Index")" asp-route-id="@Model.Id" class="btn btn-secundario ms-2">Cancelar</a>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

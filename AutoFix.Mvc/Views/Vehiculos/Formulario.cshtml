@@ -1,0 +1,55 @@
+@model VehiculoFormVm
+@{
+    var editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar vehículo" : "Registrar vehículo";
+}
+<div class="encabezado"><h1 class="titulo">@ViewData["Title"]</h1></div>
+<div class="panel" style="max-width: 760px">
+    <form asp-action="@(editando ? "Editar" : "Crear")" asp-route-id="@Model.Id" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="ClienteId" class="form-label"></label>
+            <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select">
+                <option value="0">Selecciona el propietario</option>
+            </select>
+            <span asp-validation-for="ClienteId"></span>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label asp-for="Placa" class="form-label"></label>
+                <input asp-for="Placa" class="form-control text-uppercase" placeholder="P123-456" />
+                <span asp-validation-for="Placa"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Marca" class="form-label"></label>
+                <input asp-for="Marca" class="form-control" />
+                <span asp-validation-for="Marca"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Modelo" class="form-label"></label>
+                <input asp-for="Modelo" class="form-control" />
+                <span asp-validation-for="Modelo"></span>
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label asp-for="Anio" class="form-label"></label>
+                <input asp-for="Anio" class="form-control" min="1950" max="@(DateTime.Now.Year + 1)" />
+                <span asp-validation-for="Anio"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Color" class="form-label"></label>
+                <input asp-for="Color" class="form-control" />
+                <span asp-validation-for="Color"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="NumeroChasis" class="form-label"></label>
+                <input asp-for="NumeroChasis" class="form-control text-uppercase" />
+                <span asp-validation-for="NumeroChasis"></span>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primario">@(editando ? "Guardar cambios" : "Registrar vehículo")</button>
+        <a href="javascript:history.back()" class="btn btn-secundario ms-2">Cancelar</a>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
