@@ -43,11 +43,14 @@ public static class Formato
     /// <summary>Clase CSS de la "etiqueta" de estado.</summary>
     public static string ClaseEstado(string? v) => v switch
     {
-        "Recibido" => "tag-gris",
-        "EnDiagnostico" or "Presupuestado" => "tag-azul",
-        "PendienteAprobacion" or "Borrador" => "tag-ambar",
-        "Aprobado" or "EnReparacion" => "tag-verde-claro",
-        "Finalizado" or "Entregado" => "tag-verde",
+        "Recibido" or "Borrador" => "tag-gris",
+        "EnDiagnostico" => "tag-azul",
+        "Presupuestado" => "tag-violeta",
+        "PendienteAprobacion" => "tag-ambar",
+        "Aprobado" => "tag-teal",
+        "EnReparacion" => "tag-naranja",
+        "Finalizado" => "tag-verde",
+        "Entregado" => "tag-verde-oscuro",
         "Cancelado" or "Rechazado" => "tag-rojo",
         _ => "tag-gris"
     };

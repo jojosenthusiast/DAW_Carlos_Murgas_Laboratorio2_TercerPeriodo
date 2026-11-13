@@ -15,17 +15,17 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3"><div class="cifra destacada"><div class="valor">@Model.OrdenesActivas</div><div class="etiqueta">Órdenes en proceso</div></div></div>
-    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.PresupuestosPendientes</div><div class="etiqueta">Presupuestos por aprobar</div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra destacada"><span class="icono"><i class="bi bi-wrench-adjustable"></i></span><div><div class="valor">@Model.OrdenesActivas</div><div class="etiqueta">Órdenes en proceso</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-hourglass-split"></i></span><div><div class="valor">@Model.PresupuestosPendientes</div><div class="etiqueta">Presupuestos por aprobar</div></div></div></div>
     @if (esCliente)
     {
-        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.TotalVehiculos</div><div class="etiqueta">Vehículos registrados</div></div></div>
-        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.OrdenesFinalizadasMes</div><div class="etiqueta">Finalizadas este mes</div></div></div>
+        <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-car-front"></i></span><div><div class="valor">@Model.TotalVehiculos</div><div class="etiqueta">Vehículos registrados</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-check2-circle"></i></span><div><div class="valor">@Model.OrdenesFinalizadasMes</div><div class="etiqueta">Finalizadas este mes</div></div></div></div>
     }
     else
     {
-        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.AsignacionesHoy</div><div class="etiqueta">Asignaciones para hoy</div></div></div>
-        <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Formato.Dinero(Model.MontoAprobadoMes)</div><div class="etiqueta">Aprobado este mes</div></div></div>
+        <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-calendar-event"></i></span><div><div class="valor">@Model.AsignacionesHoy</div><div class="etiqueta">Asignaciones para hoy</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-cash-coin"></i></span><div><div class="valor">@Formato.Dinero(Model.MontoAprobadoMes)</div><div class="etiqueta">Aprobado este mes</div></div></div></div>
     }
 </div>
 
@@ -66,21 +66,25 @@
             {
                 <p class="texto-suave mb-0">Sin datos todavía.</p>
             }
+            @{ var maximo = Model.OrdenesPorEstado.Count == 0 ? 1 : Math.Max(1, Model.OrdenesPorEstado.Max(x => x.Cantidad)); }
             @foreach (var e in Model.OrdenesPorEstado)
             {
-                <div class="d-flex justify-content-between align-items-center py-1">
-                    <partial name="_Estado" model="e.Estado" />
-                    <strong>@e.Cantidad</strong>
+                <div class="barra-estado">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <partial name="_Estado" model="e.Estado" />
+                        <strong>@e.Cantidad</strong>
+                    </div>
+                    <div class="barra-pista"><div class="barra-relleno @Formato.ClaseEstado(e.Estado)" style="width: @((e.Cantidad * 100 / maximo).ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
                 </div>
             }
         </div>
         @if (!esCliente)
         {
             <div class="panel">
-                <h2 class="subtitulo">Stock mínimo alcanzado</h2>
+                <h2 class="subtitulo"><i class="bi bi-exclamation-triangle text-warning me-1"></i>Stock mínimo alcanzado</h2>
                 @if (Model.RepuestosEnAlerta.Count == 0)
                 {
-                    <p class="texto-suave mb-0">Todos los repuestos están por encima del mínimo.</p>
+                    <p class="texto-suave mb-0"><i class="bi bi-check-circle text-success me-1"></i>Todos los repuestos están por encima del mínimo.</p>
                 }
                 @foreach (var r in Model.RepuestosEnAlerta)
                 {

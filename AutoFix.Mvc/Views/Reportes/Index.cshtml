@@ -17,10 +17,10 @@
 </form>
 
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3"><div class="cifra destacada"><div class="valor">@Model.Ordenes.Total</div><div class="etiqueta">Órdenes en el periodo</div></div></div>
-    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Formato.Dinero(Model.Ordenes.MontoAprobado)</div><div class="etiqueta">Presupuestos aprobados</div></div></div>
-    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Formato.Dinero(Model.Inventario.ValorInventario)</div><div class="etiqueta">Valor del inventario</div></div></div>
-    <div class="col-6 col-lg-3"><div class="cifra"><div class="valor">@Model.Inventario.EnAlerta</div><div class="etiqueta">Repuestos en stock mínimo</div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra destacada"><span class="icono"><i class="bi bi-clipboard-data"></i></span><div><div class="valor">@Model.Ordenes.Total</div><div class="etiqueta">Órdenes en el periodo</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-cash-coin"></i></span><div><div class="valor">@Formato.Dinero(Model.Ordenes.MontoAprobado)</div><div class="etiqueta">Presupuestos aprobados</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-boxes"></i></span><div><div class="valor">@Formato.Dinero(Model.Inventario.ValorInventario)</div><div class="etiqueta">Valor del inventario</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="cifra"><span class="icono"><i class="bi bi-exclamation-triangle"></i></span><div><div class="valor">@Model.Inventario.EnAlerta</div><div class="etiqueta">Repuestos en stock mínimo</div></div></div></div>
 </div>
 
 <div class="row g-4 mb-4">
@@ -83,7 +83,7 @@
         <tbody>
         @if (Model.Ordenes.Ordenes.Count == 0)
         {
-            <tr><td colspan="7" class="texto-suave p-4">Sin órdenes en el periodo.</td></tr>
+            <tr><td colspan="7" class="vacio"><i class="bi bi-inbox"></i><span>Sin órdenes en el periodo.</span></td></tr>
         }
         @foreach (var o in Model.Ordenes.Ordenes)
         {

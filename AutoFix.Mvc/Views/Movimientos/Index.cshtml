@@ -48,7 +48,7 @@
         <tbody>
         @if (Model.Count == 0)
         {
-            <tr><td colspan="9" class="texto-suave p-4">No hay movimientos con ese filtro.</td></tr>
+            <tr><td colspan="9" class="vacio"><i class="bi bi-inbox"></i><span>No hay movimientos con ese filtro.</span></td></tr>
         }
         @foreach (var m in Model)
         {

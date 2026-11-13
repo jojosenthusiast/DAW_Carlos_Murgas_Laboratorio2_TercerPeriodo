@@ -34,7 +34,7 @@
         <tbody>
         @if (Model.Count == 0)
         {
-            <tr><td colspan="8" class="texto-suave p-4">No hay repuestos con ese criterio.</td></tr>
+            <tr><td colspan="8" class="vacio"><i class="bi bi-inbox"></i><span>No hay repuestos con ese criterio.</span></td></tr>
         }
         @foreach (var r in Model)
         {

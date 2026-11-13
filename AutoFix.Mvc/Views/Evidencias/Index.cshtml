@@ -29,23 +29,28 @@
 </form>
 @if (Model.Count == 0)
 {
-    <div class="panel texto-suave">No hay fotografías con ese filtro.</div>
+    <div class="panel vacio"><i class="bi bi-images"></i><span>No hay fotografías con ese filtro.</span></div>
 }
 <div class="galeria">
     @foreach (var e in Model)
     {
+        var url = Rutas.Imagen(e.Ruta);
         <figure class="foto m-0">
-            <a href="@Rutas.Imagen(e.Ruta)" target="_blank" rel="noopener"><img src="@Rutas.Imagen(e.Ruta)" alt="@Formato.Evidencia(e.Tipo) de la orden @e.NumeroOrden" loading="lazy" /></a>
+            <a href="@url" class="foto-enlace" data-lightbox data-titulo="@e.NumeroOrden, @Formato.Evidencia(e.Tipo)" target="_blank" rel="noopener">
+                <img src="@url" alt="@Formato.Evidencia(e.Tipo) de la orden @e.NumeroOrden" loading="lazy" />
+                <span class="foto-tipo tipo-@e.Tipo.ToLowerInvariant()">@Formato.Evidencia(e.Tipo)</span>
+            </a>
             <figcaption class="pie">
-                <a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@e.OrdenId"><strong>@e.NumeroOrden</strong></a><br />
-                @Formato.Evidencia(e.Tipo)<br />
-                @if (!string.IsNullOrWhiteSpace(e.Descripcion)) { <text>@e.Descripcion<br /></text> }
-                <span class="texto-suave">@Formato.Fecha(e.FechaSubida), @Formato.Tamano(e.TamanoBytes)</span>
-                <div class="small texto-suave text-break">@e.Ruta</div>
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                    <a asp-controller="Ordenes" asp-action="Detalle" asp-route-id="@e.OrdenId"><strong>@e.NumeroOrden</strong></a>
+                    <span class="texto-suave small">@Formato.Dia(e.FechaSubida)</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(e.Descripcion)) { <div class="mt-1">@e.Descripcion</div> }
+                <div class="small texto-suave mt-1" title="@e.Ruta">@Formato.Tamano(e.TamanoBytes)</div>
                 @if (puedeEliminar)
                 {
                     <form asp-action="Eliminar" asp-route-id="@e.Id" asp-route-ordenId="@ordenId" method="post" class="mt-2" data-confirmar="¿Eliminar esta fotografía?">
-                        <button class="btn btn-sm btn-peligro">Eliminar</button>
+                        <button class="btn btn-sm btn-peligro"><i class="bi bi-trash me-1"></i>Eliminar</button>
                     </form>
                 }
             </figcaption>

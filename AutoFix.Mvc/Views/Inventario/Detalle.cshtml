@@ -79,7 +79,7 @@
                 <tbody>
                 @if (Model.Movimientos.Count == 0)
                 {
-                    <tr><td colspan="8" class="texto-suave p-4">Sin movimientos.</td></tr>
+                    <tr><td colspan="8" class="vacio"><i class="bi bi-inbox"></i><span>Sin movimientos.</span></td></tr>
                 }
                 @foreach (var m in Model.Movimientos)
                 {

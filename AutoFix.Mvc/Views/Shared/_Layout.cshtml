@@ -21,52 +21,53 @@
 {
     <nav class="navbar navbar-expand-lg barra">
         <div class="container-fluid px-lg-4">
-            <a class="navbar-brand marca" asp-controller="Home" asp-action="Index">AutoFix</a>
+            <a class="navbar-brand marca" asp-controller="Home" asp-action="Index"><i class="bi bi-wrench-adjustable-circle-fill"></i>AutoFix</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
                 <i class="bi bi-list text-white fs-3"></i>
             </button>
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link @Activo("Home")" asp-controller="Home" asp-action="Index">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link @Activo("Home")" asp-controller="Home" asp-action="Index"><i class="bi bi-grid-1x2"></i>Inicio</a></li>
                     @if (User.IsInRole(Roles.Cliente))
                     {
-                        <li class="nav-item"><a class="nav-link @Activo("Vehiculos")" asp-controller="Vehiculos" asp-action="Index">Mis vehículos</a></li>
-                        <li class="nav-item"><a class="nav-link @Activo("Ordenes")" asp-controller="Ordenes" asp-action="Index">Mis reparaciones</a></li>
-                        <li class="nav-item"><a class="nav-link @Activo("Clientes")" asp-controller="Clientes" asp-action="MiPerfil">Mis datos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Vehiculos")" asp-controller="Vehiculos" asp-action="Index"><i class="bi bi-car-front"></i>Mis vehículos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Ordenes")" asp-controller="Ordenes" asp-action="Index"><i class="bi bi-tools"></i>Mis reparaciones</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Clientes")" asp-controller="Clientes" asp-action="MiPerfil"><i class="bi bi-person-vcard"></i>Mis datos</a></li>
                     }
                     else
                     {
-                        <li class="nav-item"><a class="nav-link @Activo("Clientes")" asp-controller="Clientes" asp-action="Index">Clientes</a></li>
-                        <li class="nav-item"><a class="nav-link @Activo("Vehiculos")" asp-controller="Vehiculos" asp-action="Index">Vehículos</a></li>
-                        <li class="nav-item"><a class="nav-link @Activo("Ordenes")" asp-controller="Ordenes" asp-action="Index">Órdenes</a></li>
-                        <li class="nav-item"><a class="nav-link @Activo("Presupuestos")" asp-controller="Presupuestos" asp-action="Index">Presupuestos</a></li>
-                        <li class="nav-item"><a class="nav-link @Activo("Mecanicos")" asp-controller="Mecanicos" asp-action="Index">Mecánicos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Clientes")" asp-controller="Clientes" asp-action="Index"><i class="bi bi-people"></i>Clientes</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Vehiculos")" asp-controller="Vehiculos" asp-action="Index"><i class="bi bi-car-front"></i>Vehículos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Ordenes")" asp-controller="Ordenes" asp-action="Index"><i class="bi bi-clipboard-check"></i>Órdenes</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Presupuestos")" asp-controller="Presupuestos" asp-action="Index"><i class="bi bi-receipt"></i>Presupuestos</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Mecanicos")" asp-controller="Mecanicos" asp-action="Index"><i class="bi bi-person-gear"></i>Mecánicos</a></li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle @(controlador is "Inventario" or "Movimientos" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Inventario</a>
+                            <a class="nav-link dropdown-toggle @(controlador is "Inventario" or "Movimientos" ? "active" : "")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-box-seam"></i>Inventario</a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" asp-controller="Inventario" asp-action="Index">Repuestos</a></li>
                                 <li><a class="dropdown-item" asp-controller="Movimientos" asp-action="Index">Entradas y salidas</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a class="nav-link @Activo("Evidencias")" asp-controller="Evidencias" asp-action="Index">Evidencias</a></li>
+                        <li class="nav-item"><a class="nav-link @Activo("Evidencias")" asp-controller="Evidencias" asp-action="Index"><i class="bi bi-images"></i>Evidencias</a></li>
                         @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Supervisor) || User.IsInRole(Roles.Recepcionista))
                         {
-                            <li class="nav-item"><a class="nav-link @Activo("Reportes")" asp-controller="Reportes" asp-action="Index">Reportes</a></li>
+                            <li class="nav-item"><a class="nav-link @Activo("Reportes")" asp-controller="Reportes" asp-action="Index"><i class="bi bi-bar-chart-line"></i>Reportes</a></li>
                         }
                     }
                 </ul>
                 <div class="d-flex align-items-center gap-3 usuario">
+                    <span class="avatar" aria-hidden="true">@((User.Identity!.Name ?? "?").Substring(0, 1).ToUpperInvariant())</span>
                     <span class="text-white-50 small d-none d-xl-inline">@User.Identity!.Name</span>
                     <span class="rol">@Formato.RolTexto(User.Rol())</span>
                     <form asp-controller="Cuenta" asp-action="Salir" method="post" class="m-0">
-                        <button type="submit" class="btn btn-sm btn-salir">Cerrar sesión</button>
+                        <button type="submit" class="btn btn-sm btn-salir"><i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión</button>
                     </form>
                 </div>
             </div>
         </div>
     </nav>
 }
-<main class="@(autenticado ? "container-fluid px-lg-4 py-4" : "")">
+<main class="@(autenticado ? "contenido container-fluid px-lg-4 py-4" : "")">
     <partial name="_Alertas" />
     @RenderBody()
 </main>
