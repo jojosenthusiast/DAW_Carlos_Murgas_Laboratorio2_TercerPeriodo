@@ -32,8 +32,8 @@ AutoFix.sln
 ## Instalación
 
 ```bash
-git clone <URL-DEL-REPOSITORIO> AutoFix
-cd AutoFix
+git clone https://github.com/jojosenthusiast/DAW_Carlos_Murgas_Laboratorio2_TercerPeriodo.git
+cd DAW_Carlos_Murgas_Laboratorio2_TercerPeriodo
 dotnet restore
 dotnet build AutoFix.sln
 dotnet dev-certs https --trust
