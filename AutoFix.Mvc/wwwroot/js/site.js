@@ -18,3 +18,38 @@ document.addEventListener('submit', function (e) {
         e.preventDefault();
     }
 });
+
+// Visor de fotografías: <a data-lightbox href="imagen" data-titulo="texto">
+(function () {
+    let visor = null;
+    function cerrar() { if (visor) { visor.remove(); visor = null; document.removeEventListener('keydown', alTeclear); } }
+    function alTeclear(e) { if (e.key === 'Escape') cerrar(); }
+    document.addEventListener('click', function (e) {
+        const enlace = e.target instanceof Element ? e.target.closest('a[data-lightbox]') : null;
+        if (!enlace || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        e.preventDefault();
+        cerrar();
+        visor = document.createElement('div');
+        visor.className = 'visor';
+        visor.setAttribute('role', 'dialog');
+        visor.setAttribute('aria-modal', 'true');
+        const img = document.createElement('img');
+        img.src = enlace.href;
+        img.alt = enlace.dataset.titulo || '';
+        const pie = document.createElement('div');
+        pie.className = 'visor-pie';
+        pie.textContent = enlace.dataset.titulo || '';
+        const x = document.createElement('button');
+        x.type = 'button'; x.className = 'visor-cerrar'; x.setAttribute('aria-label', 'Cerrar'); x.textContent = '×';
+        visor.append(img, pie, x);
+        visor.addEventListener('click', function (ev) { if (ev.target !== img) cerrar(); });
+        document.body.appendChild(visor);
+        document.addEventListener('keydown', alTeclear);
+        x.focus();
+    });
+})();
+
+// Avisos de éxito se cierran solos.
+document.querySelectorAll('.alert.aviso-ok').forEach(function (a) {
+    setTimeout(function () { a.classList.remove('show'); setTimeout(function () { a.remove(); }, 300); }, 6000);
+});

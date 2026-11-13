@@ -1,0 +1,28 @@
+@* Solo se renderiza en Development (ver Login.cshtml). Aquí viven las credenciales ficticias del laboratorio. *@
+@{
+    var demo = new (string Rol, string Nombre, string Email, string Clave)[]
+    {
+        ("Administrador", "Administrador", "admin@autofix.com", "Admin#2026"),
+        ("Recepcionista", "Recepción", "recepcion@autofix.com", "Recepcion#2026"),
+        ("Recepcionista", "Recepción (limitada)", "recepcion.limitada@autofix.com", "Recepcion#2026"),
+        ("Supervisor", "Supervisor", "supervisor@autofix.com", "Supervisor#2026"),
+        ("Supervisor", "Supervisor 2", "supervisor2@autofix.com", "Supervisor#2026"),
+        ("Mecánico", "Mecánico 1", "mecanico1@autofix.com", "Mecanico#2026"),
+        ("Mecánico", "Mecánico 2", "mecanico2@autofix.com", "Mecanico#2026"),
+        ("Cliente", "Cliente", "cliente@autofix.com", "Cliente#2026")
+    };
+}
+<button type="button" class="combo-boton" id="comboBoton" aria-label="Elegir usuario de demostración" aria-haspopup="listbox" aria-expanded="false" aria-controls="comboLista" tabindex="-1">
+    <i class="bi bi-chevron-down"></i>
+</button>
+<ul class="combo-lista" id="comboLista" role="listbox" aria-label="Usuarios de demostración" hidden>
+    <li class="combo-cabecera" role="presentation">Usuarios de demostración</li>
+    @foreach (var d in demo)
+    {
+        <li role="option" class="combo-opcion" data-email="@d.Email" data-clave="@d.Clave" data-busqueda="@($"{d.Rol} {d.Nombre} {d.Email}".ToLowerInvariant())" aria-selected="false">
+            <span class="combo-rol rol-@d.Rol.ToLowerInvariant().Replace("á", "a").Replace("é", "e").Replace("ó", "o").Replace("í", "i")">@d.Rol</span>
+            <span class="combo-datos"><strong>@d.Nombre</strong><small>@d.Email</small></span>
+        </li>
+    }
+    <li class="combo-vacio" role="presentation" hidden>Sin coincidencias. Puedes escribir un correo propio.</li>
+</ul>

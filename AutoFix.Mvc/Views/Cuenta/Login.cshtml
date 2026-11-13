@@ -1,19 +1,20 @@
 @model LoginVm
-@{ ViewData["Title"] = "Iniciar sesión"; }
+@inject IWebHostEnvironment Env
+@{
+    ViewData["Title"] = "Iniciar sesión";
+    var demo = Env.IsDevelopment();
+}
 <div class="acceso">
     <section class="lado">
         <div>
-            <h1>AutoFix</h1>
+            <h1 class="logo-grande"><i class="bi bi-wrench-adjustable-circle-fill"></i>AutoFix</h1>
             <p class="mt-3">Recepción, diagnóstico, presupuestos e inventario del taller en un solo lugar. Los clientes siguen aquí el avance de su vehículo.</p>
         </div>
-        <div class="usuarios-prueba">
-            <p class="mb-1">Usuarios de prueba (ver README):</p>
-            <div><code>admin@autofix.com</code> / <code>Admin#2026</code></div>
-            <div><code>supervisor@autofix.com</code> / <code>Supervisor#2026</code></div>
-            <div><code>recepcion@autofix.com</code> / <code>Recepcion#2026</code></div>
-            <div><code>mecanico1@autofix.com</code> / <code>Mecanico#2026</code></div>
-            <div><code>cliente@autofix.com</code> / <code>Cliente#2026</code></div>
-        </div>
+        <ul class="puntos-fuertes">
+            <li><i class="bi bi-clipboard-check"></i>Órdenes de reparación con seguimiento por estado</li>
+            <li><i class="bi bi-receipt"></i>Presupuestos claros, aprobación en línea</li>
+            <li><i class="bi bi-camera"></i>Fotografías del antes y el después</li>
+        </ul>
     </section>
     <section class="formulario">
         <div>
@@ -27,18 +28,35 @@
                 <div asp-validation-summary="ModelOnly" class="mb-3"></div>
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+                    @if (demo)
+                    {
+                        <div class="combo" id="combo">
+                            <input asp-for="Email" class="form-control" autocomplete="username" autofocus role="combobox" aria-expanded="false" aria-controls="comboLista" aria-autocomplete="list" placeholder="correo@ejemplo.com o elige un usuario" />
+                            <partial name="_UsuariosDemo" />
+                        </div>
+                        <div class="form-text"><i class="bi bi-code-slash me-1"></i>Modo desarrollo: elige un usuario de demostración o escribe otro correo.</div>
+                    }
+                    else
+                    {
+                        <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+                    }
                     <span asp-validation-for="Email"></span>
                 </div>
                 <div class="mb-4">
                     <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" id="Password" />
                     <span asp-validation-for="Password"></span>
                 </div>
-                <button type="submit" class="btn btn-primario w-100 py-2">Entrar</button>
+                <button type="submit" class="btn btn-primario w-100 py-2">Entrar<i class="bi bi-arrow-right ms-2"></i></button>
             </form>
             <p class="mt-4 mb-0">¿Eres cliente y aún no tienes cuenta? <a asp-action="Registro">Crea tu cuenta</a></p>
         </div>
     </section>
 </div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @if (demo)
+    {
+        <script src="~/js/login-demo.js" asp-append-version="true"></script>
+    }
+}
